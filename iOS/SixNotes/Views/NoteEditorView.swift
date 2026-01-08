@@ -17,11 +17,7 @@ struct NoteEditorView: View {
     }
 
     private var revealedAmount: CGFloat {
-        if showToolbar {
-            return toolbarHeight
-        } else {
-            return min(toolbarHeight, dragOffset)
-        }
+        min(toolbarHeight, dragOffset)
     }
 
     var body: some View {
@@ -60,20 +56,23 @@ struct NoteEditorView: View {
                                 dragOffset = value.translation.height
                             }
                             // Track upward drags to hide toolbar
-                            if showToolbar && value.translation.height < -20 {
-                                withAnimation(.interpolatingSpring(stiffness: 75, damping: 15)) {
-                                    showToolbar = false
-                                }
+                            if showToolbar {
+                                dragOffset = toolbarHeight + value.translation.height
                             }
                         }
                         .onEnded { value in
-                            if !showToolbar && dragOffset >= revealThreshold {
+                            if dragOffset >= revealThreshold {
+                                // Snap to fully revealed
                                 withAnimation(.interpolatingSpring(stiffness: 75, damping: 15)) {
+                                    dragOffset = toolbarHeight
                                     showToolbar = true
                                 }
-                            }
-                            withAnimation(.interpolatingSpring(stiffness: 75, damping: 15)) {
-                                dragOffset = 0
+                            } else {
+                                // Snap to hidden
+                                withAnimation(.interpolatingSpring(stiffness: 75, damping: 15)) {
+                                    dragOffset = 0
+                                    showToolbar = false
+                                }
                             }
                         }
                 )
@@ -106,6 +105,7 @@ struct NoteEditorView: View {
             ShareSheet(items: [currentNoteContent]) { completed in
                 if completed {
                     withAnimation(.interpolatingSpring(stiffness: 75, damping: 15)) {
+                        dragOffset = 0
                         showToolbar = false
                     }
                 }
