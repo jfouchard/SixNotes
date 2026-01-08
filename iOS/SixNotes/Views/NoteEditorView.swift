@@ -8,22 +8,12 @@ struct NoteEditorView: View {
     @State private var showToolbar = false
     @State private var dragOffset: CGFloat = 0
     @State private var showShareSheet = false
-    @State private var shareCompleted = false
 
     private let toolbarHeight: CGFloat = 44
     private let revealThreshold: CGFloat = 50
 
     private var currentNoteContent: String {
         notesManager.notes[noteIndex].content
-    }
-
-    private func hideToolbar() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
-                dragOffset = 0
-                showToolbar = false
-            }
-        }
     }
 
     private var revealedAmount: CGFloat {
@@ -38,7 +28,6 @@ struct NoteEditorView: View {
                     HStack {
                         Spacer()
                         Button {
-                            shareCompleted = false
                             showShareSheet = true
                         } label: {
                             Image(systemName: "square.and.arrow.up")
@@ -112,32 +101,11 @@ struct NoteEditorView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             keyboardHeight = 0
         }
-        .sheet(isPresented: $showShareSheet, onDismiss: {
-            if shareCompleted {
-                hideToolbar()
-            }
-        }) {
-            ShareSheetWithCompletion(items: [currentNoteContent]) { completed in
-                shareCompleted = completed
-            }
-            .presentationDetents([.medium, .large])
+        .sheet(isPresented: $showShareSheet) {
+            ShareSheet(items: [currentNoteContent])
+                .presentationDetents([.medium, .large])
         }
     }
-}
-
-struct ShareSheetWithCompletion: UIViewControllerRepresentable {
-    let items: [Any]
-    let onComplete: (Bool) -> Void
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
-        controller.completionWithItemsHandler = { _, completed, _, _ in
-            onComplete(completed)
-        }
-        return controller
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #Preview {
