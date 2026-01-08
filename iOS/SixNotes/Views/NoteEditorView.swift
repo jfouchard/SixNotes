@@ -48,9 +48,13 @@ struct NoteEditorView: View {
                         .padding(.top, 8)
                 }
                 .offset(y: revealedAmount - toolbarHeight)
-                .simultaneousGesture(
+                .gesture(
                     DragGesture()
                         .onChanged { value in
+                            // Only handle vertical drags - let horizontal pass through for TabView
+                            let isVertical = abs(value.translation.height) > abs(value.translation.width)
+                            guard isVertical else { return }
+
                             // Only track downward drags when toolbar is hidden
                             if !showToolbar && value.translation.height > 0 {
                                 dragOffset = value.translation.height
