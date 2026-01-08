@@ -16,21 +16,11 @@ struct NoteEditorView: View {
         notesManager.notes[noteIndex].content
     }
 
-    private var toolbarOffset: CGFloat {
+    private var revealedAmount: CGFloat {
         if showToolbar {
-            return 0
-        } else if dragOffset > 0 {
-            return toolbarHeight - min(toolbarHeight, dragOffset)
-        } else {
             return toolbarHeight
-        }
-    }
-
-    private var toolbarOpacity: CGFloat {
-        if showToolbar {
-            return 1.0
         } else {
-            return min(1.0, dragOffset / revealThreshold)
+            return min(toolbarHeight, dragOffset)
         }
     }
 
@@ -38,7 +28,7 @@ struct NoteEditorView: View {
         GeometryReader { geometry in
             ZStack(alignment: .bottomTrailing) {
                 VStack(spacing: 0) {
-                    // Revealed toolbar
+                    // Toolbar positioned above the view, revealed by note sliding down
                     HStack {
                         Spacer()
                         Button {
@@ -53,8 +43,6 @@ struct NoteEditorView: View {
                     .padding(.horizontal, 8)
                     .frame(height: toolbarHeight)
                     .background(Color(uiColor: .secondarySystemBackground))
-                    .offset(y: -toolbarOffset)
-                    .opacity(toolbarOpacity)
 
                     TextEditor(text: notesManager.noteBinding(for: noteIndex))
                         .font(notesManager.textFont.font)
@@ -62,9 +50,8 @@ struct NoteEditorView: View {
                         .scrollContentBackground(.hidden)
                         .padding(.horizontal, 16)
                         .padding(.top, 8)
-                        .offset(y: -toolbarOffset)
                 }
-                .clipped()
+                .offset(y: revealedAmount - toolbarHeight)
                 .simultaneousGesture(
                     DragGesture()
                         .onChanged { value in
