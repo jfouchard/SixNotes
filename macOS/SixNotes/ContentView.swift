@@ -4,6 +4,10 @@ struct ContentView: View {
     @EnvironmentObject var notesManager: NotesManager
     @State private var showSettings = false
 
+    private var currentNoteContent: String {
+        notesManager.notes[notesManager.selectedNoteIndex].content
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Title bar area
@@ -25,6 +29,10 @@ struct ContentView: View {
                 }
 
                 Spacer()
+
+                // Share button
+                ShareButton(content: currentNoteContent)
+                    .padding(.trailing, 8)
             }
             .frame(height: 28)
 
@@ -94,10 +102,184 @@ class PreviewWindowController {
 struct PreviewWindowContent: View {
     @EnvironmentObject var notesManager: NotesManager
 
+    private var currentNoteContent: String {
+        notesManager.notes[notesManager.selectedNoteIndex].content
+    }
+
     var body: some View {
-        MarkdownPreviewView(content: notesManager.notes[notesManager.selectedNoteIndex].content)
-            .environmentObject(notesManager)
-            .frame(minWidth: 300, minHeight: 200)
+        VStack(spacing: 0) {
+            MarkdownPreviewView(content: currentNoteContent)
+                .environmentObject(notesManager)
+
+            // Footer bar with share button
+            HStack {
+                Spacer()
+                ShareButton(
+                    content: currentNoteContent,
+                    textFont: notesManager.textFont.nsFont,
+                    codeFont: notesManager.codeFont.nsFont,
+                    asRichText: true
+                )
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(NSColor.windowBackgroundColor))
+        }
+        .frame(minWidth: 300, minHeight: 200)
+    }
+}
+
+struct ShareButton: View {
+    let content: String
+    var textFont: NSFont = .systemFont(ofSize: 14)
+    var codeFont: NSFont = .monospacedSystemFont(ofSize: 13, weight: .regular)
+    var asRichText: Bool = false
+
+    var body: some View {
+        Button {
+            share()
+        } label: {
+            Image(systemName: "square.and.arrow.up")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func share() {
+        let itemToShare: Any = asRichText ? renderMarkdownToAttributedString() : content
+        let picker = NSSharingServicePicker(items: [itemToShare])
+        if let contentView = NSApp.keyWindow?.contentView {
+            let rect = NSRect(x: contentView.bounds.maxX - 40, y: contentView.bounds.maxY - 28, width: 1, height: 1)
+            picker.show(relativeTo: rect, of: contentView, preferredEdge: .minY)
+        }
+    }
+
+    private func renderMarkdownToAttributedString() -> NSAttributedString {
+        let result = NSMutableAttributedString()
+        let lines = content.components(separatedBy: "\n")
+        var inCodeBlock = false
+        var codeBlockLines: [String] = []
+
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = 4
+
+        for line in lines {
+            if line.hasPrefix("```") {
+                if inCodeBlock {
+                    let code = codeBlockLines.joined(separator: "\n")
+                    let codeAttr = NSMutableAttributedString(string: code + "\n\n", attributes: [
+                        .font: codeFont,
+                        .backgroundColor: NSColor.secondaryLabelColor.withAlphaComponent(0.1),
+                        .paragraphStyle: paragraphStyle
+                    ])
+                    result.append(codeAttr)
+                    codeBlockLines = []
+                    inCodeBlock = false
+                } else {
+                    inCodeBlock = true
+                }
+                continue
+            }
+
+            if inCodeBlock {
+                codeBlockLines.append(line)
+                continue
+            }
+
+            if line.hasPrefix("######") {
+                appendHeader(to: result, text: String(line.dropFirst(6)), scale: 1.1, weight: .semibold)
+            } else if line.hasPrefix("#####") {
+                appendHeader(to: result, text: String(line.dropFirst(5)), scale: 1.15, weight: .semibold)
+            } else if line.hasPrefix("####") {
+                appendHeader(to: result, text: String(line.dropFirst(4)), scale: 1.2, weight: .bold)
+            } else if line.hasPrefix("###") {
+                appendHeader(to: result, text: String(line.dropFirst(3)), scale: 1.3, weight: .bold)
+            } else if line.hasPrefix("##") {
+                appendHeader(to: result, text: String(line.dropFirst(2)), scale: 1.5, weight: .bold)
+            } else if line.hasPrefix("#") {
+                appendHeader(to: result, text: String(line.dropFirst(1)), scale: 1.8, weight: .bold)
+            } else if line.hasPrefix(">") {
+                let text = line.dropFirst(1).trimmingCharacters(in: .whitespaces)
+                let blockquoteStyle = NSMutableParagraphStyle()
+                blockquoteStyle.firstLineHeadIndent = 12
+                blockquoteStyle.headIndent = 12
+                blockquoteStyle.lineSpacing = 4
+                let attr = NSAttributedString(string: text + "\n", attributes: [
+                    .font: textFont,
+                    .foregroundColor: NSColor.secondaryLabelColor,
+                    .paragraphStyle: blockquoteStyle
+                ])
+                result.append(attr)
+            } else if line.hasPrefix("- ") || line.hasPrefix("* ") {
+                let text = String(line.dropFirst(2))
+                let listStyle = NSMutableParagraphStyle()
+                listStyle.firstLineHeadIndent = 0
+                listStyle.headIndent = 16
+                listStyle.lineSpacing = 4
+                result.append(NSAttributedString(string: "• ", attributes: [
+                    .font: textFont,
+                    .paragraphStyle: listStyle
+                ]))
+                appendInlineMarkdown(to: result, text: text + "\n")
+            } else if line.trimmingCharacters(in: .whitespaces) == "---" {
+                result.append(NSAttributedString(string: "―――――――――――――――――――\n", attributes: [
+                    .font: textFont,
+                    .foregroundColor: NSColor.separatorColor
+                ]))
+            } else if !line.isEmpty {
+                appendInlineMarkdown(to: result, text: line + "\n")
+            } else {
+                result.append(NSAttributedString(string: "\n"))
+            }
+        }
+
+        return result
+    }
+
+    private func appendHeader(to result: NSMutableAttributedString, text: String, scale: CGFloat, weight: NSFont.Weight) {
+        let headerFont = NSFont.systemFont(ofSize: textFont.pointSize * scale, weight: weight)
+        let headerStyle = NSMutableParagraphStyle()
+        headerStyle.lineSpacing = 4
+        headerStyle.paragraphSpacingBefore = 8
+        let attr = NSAttributedString(string: text.trimmingCharacters(in: .whitespaces) + "\n", attributes: [
+            .font: headerFont,
+            .paragraphStyle: headerStyle
+        ])
+        result.append(attr)
+    }
+
+    private func appendInlineMarkdown(to result: NSMutableAttributedString, text: String) {
+        if let attributed = try? NSAttributedString(markdown: text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)) {
+            let mutable = NSMutableAttributedString(attributedString: attributed)
+            mutable.enumerateAttribute(.font, in: NSRange(location: 0, length: mutable.length)) { value, range, _ in
+                if let existingFont = value as? NSFont {
+                    let traits = NSFontManager.shared.traits(of: existingFont)
+                    var newFont = textFont
+                    if traits.contains(.boldFontMask) && traits.contains(.italicFontMask) {
+                        newFont = NSFontManager.shared.convert(textFont, toHaveTrait: [.boldFontMask, .italicFontMask])
+                    } else if traits.contains(.boldFontMask) {
+                        newFont = NSFontManager.shared.convert(textFont, toHaveTrait: .boldFontMask)
+                    } else if traits.contains(.italicFontMask) {
+                        newFont = NSFontManager.shared.convert(textFont, toHaveTrait: .italicFontMask)
+                    }
+                    mutable.addAttribute(.font, value: newFont, range: range)
+                } else {
+                    mutable.addAttribute(.font, value: textFont, range: range)
+                }
+            }
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.lineSpacing = 4
+            mutable.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: mutable.length))
+            result.append(mutable)
+        } else {
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.lineSpacing = 4
+            result.append(NSAttributedString(string: text, attributes: [
+                .font: textFont,
+                .paragraphStyle: paragraphStyle
+            ]))
+        }
     }
 }
 
