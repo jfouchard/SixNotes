@@ -122,7 +122,7 @@ struct NoteDot: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(isSelected ? noteColor : (hasContent ? noteColor.opacity(0.5) : noteColor.opacity(0.25)))
+                .fill(isSelected ? noteColor : (hasContent ? noteColor.opacity(0.6) : noteColor.opacity(0.2)))
                 .frame(width: 10, height: 10)
 
             if isSelected {

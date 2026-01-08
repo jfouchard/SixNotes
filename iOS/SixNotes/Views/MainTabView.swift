@@ -38,7 +38,7 @@ struct MainTabView: View {
                         notesManager.selectNote(index)
                     } label: {
                         Circle()
-                            .fill(selectedTab == index ? noteColor : (notesManager.hasContent(at: index) ? noteColor.opacity(0.5) : noteColor.opacity(0.25)))
+                            .fill(selectedTab == index ? noteColor : (notesManager.hasContent(at: index) ? noteColor.opacity(0.6) : noteColor.opacity(0.2)))
                             .frame(width: 12, height: 12)
                             .overlay {
                                 if selectedTab == index {
