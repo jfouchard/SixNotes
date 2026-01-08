@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @EnvironmentObject var notesManager: NotesManager
@@ -171,37 +172,45 @@ struct ShareRichTextButton: View {
     }
 }
 
-// Wrapper that provides RTF/HTML data representations for sharing
-class RichTextSharingItem: NSObject, NSPasteboardWriting {
+// Wrapper that provides rich text for sharing via NSItemProvider
+class RichTextSharingItem: NSObject, NSItemProviderWriting {
     let attributedString: NSAttributedString
 
     init(_ attributedString: NSAttributedString) {
         self.attributedString = attributedString
     }
 
-    func writableTypes(for pasteboard: NSPasteboard) -> [NSPasteboard.PasteboardType] {
-        [.rtf, .html, .string]
+    static var writableTypeIdentifiersForItemProvider: [String] {
+        [UTType.rtf.identifier, UTType.html.identifier, UTType.plainText.identifier]
     }
 
-    func pasteboardPropertyList(forType type: NSPasteboard.PasteboardType) -> Any? {
+    func loadData(withTypeIdentifier typeIdentifier: String, forItemProviderCompletionHandler completionHandler: @escaping @Sendable (Data?, Error?) -> Void) -> Progress? {
         let range = NSRange(location: 0, length: attributedString.length)
 
-        switch type {
-        case .rtf:
-            return try? attributedString.data(
-                from: range,
-                documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]
-            )
-        case .html:
-            return try? attributedString.data(
-                from: range,
-                documentAttributes: [.documentType: NSAttributedString.DocumentType.html]
-            )
-        case .string:
-            return attributedString.string
-        default:
-            return nil
+        do {
+            if typeIdentifier == UTType.rtf.identifier {
+                let data = try attributedString.data(
+                    from: range,
+                    documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]
+                )
+                completionHandler(data, nil)
+            } else if typeIdentifier == UTType.html.identifier {
+                let data = try attributedString.data(
+                    from: range,
+                    documentAttributes: [.documentType: NSAttributedString.DocumentType.html]
+                )
+                completionHandler(data, nil)
+            } else if typeIdentifier == UTType.plainText.identifier {
+                let data = attributedString.string.data(using: .utf8)
+                completionHandler(data, nil)
+            } else {
+                completionHandler(nil, nil)
+            }
+        } catch {
+            completionHandler(nil, error)
         }
+
+        return nil
     }
 }
 
