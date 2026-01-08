@@ -104,6 +104,11 @@ xcodebuild test -project iOS/SixNotes.xcodeproj -scheme SixNotes -destination 'p
 - Clear UserDefaults in setUp/tearDown to ensure test isolation
 - Platform-specific tests: use UIFont on iOS, NSFont on macOS
 
+## Git Workflow
+
+- Commit changes as needed, but **only push to GitHub when explicitly asked**
+- Do not automatically push after commits
+
 ## Deployment Targets
 
 - iOS: 16.0+
