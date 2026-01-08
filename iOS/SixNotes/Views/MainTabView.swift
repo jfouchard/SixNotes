@@ -4,6 +4,15 @@ struct MainTabView: View {
     @EnvironmentObject var notesManager: NotesManager
     @State private var selectedTab = 0
 
+    static let noteColors: [Color] = [
+        Color(red: 0.70, green: 0.45, blue: 0.85),  // Purple
+        Color(red: 0.35, green: 0.60, blue: 0.90),  // Blue
+        Color(red: 0.40, green: 0.78, blue: 0.45),  // Green
+        Color(red: 0.95, green: 0.75, blue: 0.25),  // Yellow
+        Color(red: 0.95, green: 0.55, blue: 0.25),  // Orange
+        Color(red: 0.90, green: 0.30, blue: 0.35),  // Red
+    ]
+
     var body: some View {
         VStack(spacing: 0) {
             // Swipeable note editors
@@ -21,6 +30,7 @@ struct MainTabView: View {
             // Custom tab bar
             HStack(spacing: 24) {
                 ForEach(0..<6, id: \.self) { index in
+                    let noteColor = Self.noteColors[index]
                     Button {
                         withAnimation {
                             selectedTab = index
@@ -28,12 +38,12 @@ struct MainTabView: View {
                         notesManager.selectNote(index)
                     } label: {
                         Circle()
-                            .fill(selectedTab == index ? Color.accentColor : (notesManager.hasContent(at: index) ? Color.secondary.opacity(0.5) : Color.secondary.opacity(0.2)))
+                            .fill(selectedTab == index ? noteColor : (notesManager.hasContent(at: index) ? noteColor.opacity(0.6) : noteColor.opacity(0.2)))
                             .frame(width: 12, height: 12)
                             .overlay {
                                 if selectedTab == index {
                                     Circle()
-                                        .stroke(Color.accentColor.opacity(0.3), lineWidth: 2)
+                                        .stroke(noteColor.opacity(0.4), lineWidth: 2)
                                         .frame(width: 20, height: 20)
                                 }
                             }
