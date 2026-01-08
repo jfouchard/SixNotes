@@ -55,9 +55,14 @@ struct MainTabView: View {
 
 struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
+    var onComplete: ((Bool) -> Void)? = nil
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        controller.completionWithItemsHandler = { activityType, completed, returnedItems, error in
+            onComplete?(completed)
+        }
+        return controller
     }
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
