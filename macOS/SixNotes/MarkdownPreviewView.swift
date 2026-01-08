@@ -1,5 +1,11 @@
 import SwiftUI
 
+// Shared storage for the preview's attributed string
+class PreviewTextStorage: ObservableObject {
+    static let shared = PreviewTextStorage()
+    @Published var attributedString: NSAttributedString = NSAttributedString()
+}
+
 struct MarkdownPreviewView: View {
     @EnvironmentObject var notesManager: NotesManager
     let content: String
@@ -48,6 +54,8 @@ struct MarkdownTextView: NSViewRepresentable {
     private func updateTextView(_ textView: NSTextView) {
         let attributedString = renderMarkdown()
         textView.textStorage?.setAttributedString(attributedString)
+        // Store for sharing
+        PreviewTextStorage.shared.attributedString = attributedString
     }
 
     private func renderMarkdown() -> NSAttributedString {
