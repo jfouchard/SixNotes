@@ -8,6 +8,7 @@ struct NoteEditorView: View {
     @State private var showToolbar = false
     @State private var dragOffset: CGFloat = 0
     @State private var showShareSheet = false
+    @State private var isDraggingVertically: Bool? = nil
 
     private let toolbarHeight: CGFloat = 44
     private let revealThreshold: CGFloat = 50
@@ -49,9 +50,19 @@ struct NoteEditorView: View {
                         .padding(.top, 8)
                 }
                 .offset(y: revealedAmount - toolbarHeight)
+                .contentShape(Rectangle())
                 .gesture(
-                    DragGesture(minimumDistance: 10)
+                    DragGesture(minimumDistance: 0)
                         .onChanged { value in
+                            // Determine direction on first significant movement (after 15pt)
+                            if isDraggingVertically == nil && (abs(value.translation.height) > 15 || abs(value.translation.width) > 15) {
+                                let isVertical = abs(value.translation.height) > abs(value.translation.width)
+                                isDraggingVertically = isVertical
+                            }
+
+                            // Only handle if we determined this is a vertical drag
+                            guard isDraggingVertically == true else { return }
+
                             // Only track downward drags when toolbar is hidden (with resistance)
                             if !showToolbar && value.translation.height > 0 {
                                 dragOffset = value.translation.height * dragResistance
@@ -62,6 +73,11 @@ struct NoteEditorView: View {
                             }
                         }
                         .onEnded { value in
+                            let wasVertical = isDraggingVertically == true
+                            isDraggingVertically = nil
+
+                            guard wasVertical else { return }
+
                             if dragOffset >= revealThreshold {
                                 // Snap to fully revealed
                                 withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
