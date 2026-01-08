@@ -57,15 +57,31 @@ struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
     var onComplete: ((Bool) -> Void)? = nil
 
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onComplete: onComplete)
+    }
+
     func makeUIViewController(context: Context) -> UIActivityViewController {
         let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
-        controller.completionWithItemsHandler = { activityType, completed, returnedItems, error in
-            onComplete?(completed)
-        }
+        controller.completionWithItemsHandler = context.coordinator.completionHandler
         return controller
     }
 
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
+        context.coordinator.onComplete = onComplete
+    }
+
+    class Coordinator {
+        var onComplete: ((Bool) -> Void)?
+
+        init(onComplete: ((Bool) -> Void)?) {
+            self.onComplete = onComplete
+        }
+
+        lazy var completionHandler: UIActivityViewController.CompletionWithItemsHandler = { [weak self] activityType, completed, returnedItems, error in
+            self?.onComplete?(completed)
+        }
+    }
 }
 
 #Preview {
