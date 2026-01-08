@@ -5,12 +5,12 @@ struct MainTabView: View {
     @State private var selectedTab = 0
 
     static let noteColors: [Color] = [
-        Color(red: 0.90, green: 0.30, blue: 0.35),  // Red
-        Color(red: 0.95, green: 0.55, blue: 0.25),  // Orange
-        Color(red: 0.95, green: 0.75, blue: 0.25),  // Yellow
-        Color(red: 0.40, green: 0.78, blue: 0.45),  // Green
-        Color(red: 0.35, green: 0.60, blue: 0.90),  // Blue
         Color(red: 0.70, green: 0.45, blue: 0.85),  // Purple
+        Color(red: 0.35, green: 0.60, blue: 0.90),  // Blue
+        Color(red: 0.40, green: 0.78, blue: 0.45),  // Green
+        Color(red: 0.95, green: 0.75, blue: 0.25),  // Yellow
+        Color(red: 0.95, green: 0.55, blue: 0.25),  // Orange
+        Color(red: 0.90, green: 0.30, blue: 0.35),  // Red
     ]
 
     var body: some View {
