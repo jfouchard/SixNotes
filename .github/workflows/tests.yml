@@ -33,12 +33,9 @@ jobs:
       - name: Select Xcode 26
         run: sudo xcode-select -s /Applications/Xcode_26.1.1.app
 
-      - name: List available simulators
-        run: xcrun simctl list devices available
-
       - name: Run iOS Tests
         run: |
           xcodebuild test \
             -project iOS/SixNotes.xcodeproj \
             -scheme SixNotes \
-            -destination 'generic/platform=iOS Simulator'
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.4'
