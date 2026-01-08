@@ -46,9 +46,11 @@ struct NoteEditorView: View {
             .gesture(
                 DragGesture()
                     .onChanged { value in
-                        // Only allow downward drag from near the top
-                        if value.startLocation.y < 100 && value.translation.height > 0 {
-                            dragOffset = min(maxDragOffset, value.translation.height)
+                        // Allow downward drag from anywhere (like pull-to-refresh)
+                        if value.translation.height > 0 {
+                            // Apply resistance as it gets further
+                            let resistance: CGFloat = 0.5
+                            dragOffset = min(maxDragOffset, value.translation.height * resistance)
                         }
                     }
                     .onEnded { value in
