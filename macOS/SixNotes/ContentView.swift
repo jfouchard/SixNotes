@@ -160,12 +160,47 @@ struct ShareRichTextButton: View {
     }
 
     private func share() {
-        // Use the same attributed string that's displayed in the preview
+        // Wrap the attributed string to provide RTF/HTML data representations
         let attributedString = PreviewTextStorage.shared.attributedString
-        let picker = NSSharingServicePicker(items: [attributedString])
+        let richTextItem = RichTextSharingItem(attributedString)
+        let picker = NSSharingServicePicker(items: [richTextItem])
         if let contentView = NSApp.keyWindow?.contentView {
             let rect = NSRect(x: contentView.bounds.maxX - 40, y: contentView.bounds.maxY - 28, width: 1, height: 1)
             picker.show(relativeTo: rect, of: contentView, preferredEdge: .minY)
+        }
+    }
+}
+
+// Wrapper that provides RTF/HTML data representations for sharing
+class RichTextSharingItem: NSObject, NSPasteboardWriting {
+    let attributedString: NSAttributedString
+
+    init(_ attributedString: NSAttributedString) {
+        self.attributedString = attributedString
+    }
+
+    func writableTypes(for pasteboard: NSPasteboard) -> [NSPasteboard.PasteboardType] {
+        [.rtf, .html, .string]
+    }
+
+    func pasteboardPropertyList(forType type: NSPasteboard.PasteboardType) -> Any? {
+        let range = NSRange(location: 0, length: attributedString.length)
+
+        switch type {
+        case .rtf:
+            return try? attributedString.data(
+                from: range,
+                documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]
+            )
+        case .html:
+            return try? attributedString.data(
+                from: range,
+                documentAttributes: [.documentType: NSAttributedString.DocumentType.html]
+            )
+        case .string:
+            return attributedString.string
+        default:
+            return nil
         }
     }
 }
