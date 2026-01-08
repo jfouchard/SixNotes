@@ -5,11 +5,7 @@ struct NoteEditorView: View {
     @EnvironmentObject var notesManager: NotesManager
     @FocusState private var isFocused: Bool
     @State private var keyboardHeight: CGFloat = 0
-    @State private var dragOffset: CGFloat = 0
     @State private var showShareSheet = false
-
-    private let shareButtonRevealThreshold: CGFloat = 60
-    private let maxDragOffset: CGFloat = 80
 
     private var currentNoteContent: String {
         notesManager.notes[noteIndex].content
@@ -17,53 +13,19 @@ struct NoteEditorView: View {
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            VStack(spacing: 0) {
-                // Pull-to-reveal share button area
-                if dragOffset > 0 {
-                    HStack {
-                        Spacer()
-                        Button {
-                            showShareSheet = true
-                        } label: {
-                            Image(systemName: "square.and.arrow.up")
-                                .font(.title2)
-                                .foregroundStyle(.primary)
-                                .opacity(min(1.0, dragOffset / shareButtonRevealThreshold))
-                        }
-                        Spacer()
-                    }
-                    .frame(height: dragOffset)
-                    .background(Color(uiColor: .systemBackground).opacity(0.8))
-                }
-
+            ScrollView {
                 TextEditor(text: notesManager.noteBinding(for: noteIndex))
                     .font(notesManager.textFont.font)
                     .focused($isFocused)
                     .scrollContentBackground(.hidden)
+                    .scrollDisabled(true)
+                    .frame(minHeight: UIScreen.main.bounds.height - 200)
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
             }
-            .gesture(
-                DragGesture()
-                    .onChanged { value in
-                        // Allow downward drag from anywhere (like pull-to-refresh)
-                        if value.translation.height > 0 {
-                            // Apply resistance as it gets further
-                            let resistance: CGFloat = 0.5
-                            dragOffset = min(maxDragOffset, value.translation.height * resistance)
-                        }
-                    }
-                    .onEnded { value in
-                        // If dragged past threshold, show share sheet
-                        if dragOffset >= shareButtonRevealThreshold {
-                            showShareSheet = true
-                        }
-                        // Animate back to hidden
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            dragOffset = 0
-                        }
-                    }
-            )
+            .refreshable {
+                showShareSheet = true
+            }
 
             // Done button that appears only when software keyboard is up
             if keyboardHeight > 0 {
