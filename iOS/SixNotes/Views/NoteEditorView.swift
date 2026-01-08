@@ -96,7 +96,7 @@ struct NoteEditorView: View {
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(items: [currentNoteContent]) { completed in
                 if completed {
-                    withAnimation(.easeOut(duration: 0.2)) {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                         showToolbar = false
                     }
                 }
