@@ -107,20 +107,9 @@ struct PreviewWindowContent: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            MarkdownPreviewView(content: currentNoteContent)
-                .environmentObject(notesManager)
-
-            // Footer bar with share button
-            HStack {
-                Spacer()
-                ShareRichTextButton()
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color(NSColor.windowBackgroundColor))
-        }
-        .frame(minWidth: 300, minHeight: 200)
+        MarkdownPreviewView(content: currentNoteContent)
+            .environmentObject(notesManager)
+            .frame(minWidth: 300, minHeight: 200)
     }
 }
 
@@ -140,42 +129,6 @@ struct ShareButton: View {
 
     private func share() {
         let picker = NSSharingServicePicker(items: [content])
-        if let contentView = NSApp.keyWindow?.contentView {
-            let rect = NSRect(x: contentView.bounds.maxX - 40, y: contentView.bounds.maxY - 28, width: 1, height: 1)
-            picker.show(relativeTo: rect, of: contentView, preferredEdge: .minY)
-        }
-    }
-}
-
-struct ShareRichTextButton: View {
-    var body: some View {
-        Button {
-            share()
-        } label: {
-            Image(systemName: "square.and.arrow.up")
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func share() {
-        // Write rich text to pasteboard, then show sharing picker with the attributed string
-        let attributedString = PreviewTextStorage.shared.attributedString
-        let range = NSRange(location: 0, length: attributedString.length)
-
-        // Write to general pasteboard first (like copy does)
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        pasteboard.writeObjects([attributedString])
-
-        // Also try to add RTF data explicitly
-        if let rtfData = try? attributedString.data(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]) {
-            pasteboard.setData(rtfData, forType: .rtf)
-        }
-
-        // Show picker - services should pick up from pasteboard
-        let picker = NSSharingServicePicker(items: [attributedString])
         if let contentView = NSApp.keyWindow?.contentView {
             let rect = NSRect(x: contentView.bounds.maxX - 40, y: contentView.bounds.maxY - 28, width: 1, height: 1)
             picker.show(relativeTo: rect, of: contentView, preferredEdge: .minY)
