@@ -31,6 +31,13 @@ struct NoteEditorView: View {
             }
         }
 
+        // On iPhone, UIActivityViewController is presented as a sheet with built-in dismiss
+        // On iPad, it needs to be presented from a popover
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            activityVC.popoverPresentationController?.sourceView = rootVC.view
+            activityVC.popoverPresentationController?.sourceRect = CGRect(x: rootVC.view.bounds.midX, y: 100, width: 0, height: 0)
+        }
+
         // Find the topmost presented controller
         var topVC = rootVC
         while let presented = topVC.presentedViewController {
