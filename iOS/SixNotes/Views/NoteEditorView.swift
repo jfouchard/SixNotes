@@ -16,6 +16,24 @@ struct NoteEditorView: View {
         notesManager.notes[noteIndex].content
     }
 
+    private var toolbarOffset: CGFloat {
+        if showToolbar {
+            return 0
+        } else if dragOffset > 0 {
+            return toolbarHeight - min(toolbarHeight, dragOffset)
+        } else {
+            return toolbarHeight
+        }
+    }
+
+    private var toolbarOpacity: CGFloat {
+        if showToolbar {
+            return 1.0
+        } else {
+            return min(1.0, dragOffset / revealThreshold)
+        }
+    }
+
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .bottomTrailing) {
@@ -33,10 +51,10 @@ struct NoteEditorView: View {
                         }
                     }
                     .padding(.horizontal, 8)
-                    .frame(height: showToolbar ? toolbarHeight : (dragOffset > 0 ? min(toolbarHeight, dragOffset) : 0))
+                    .frame(height: toolbarHeight)
                     .background(Color(uiColor: .secondarySystemBackground))
-                    .opacity(showToolbar ? 1.0 : min(1.0, dragOffset / revealThreshold))
-                    .clipped()
+                    .offset(y: -toolbarOffset)
+                    .opacity(toolbarOpacity)
 
                     TextEditor(text: notesManager.noteBinding(for: noteIndex))
                         .font(notesManager.textFont.font)
@@ -44,7 +62,9 @@ struct NoteEditorView: View {
                         .scrollContentBackground(.hidden)
                         .padding(.horizontal, 16)
                         .padding(.top, 8)
+                        .offset(y: -toolbarOffset)
                 }
+                .clipped()
                 .simultaneousGesture(
                     DragGesture()
                         .onChanged { value in
@@ -54,18 +74,20 @@ struct NoteEditorView: View {
                             }
                             // Track upward drags to hide toolbar
                             if showToolbar && value.translation.height < -20 {
-                                withAnimation(.easeOut(duration: 0.2)) {
+                                withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
                                     showToolbar = false
                                 }
                             }
                         }
                         .onEnded { value in
                             if !showToolbar && dragOffset >= revealThreshold {
-                                withAnimation(.easeOut(duration: 0.2)) {
+                                withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
                                     showToolbar = true
                                 }
                             }
-                            dragOffset = 0
+                            withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
+                                dragOffset = 0
+                            }
                         }
                 )
 
@@ -96,7 +118,7 @@ struct NoteEditorView: View {
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(items: [currentNoteContent]) { completed in
                 if completed {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    withAnimation(.interpolatingSpring(stiffness: 300, damping: 30)) {
                         showToolbar = false
                     }
                 }
