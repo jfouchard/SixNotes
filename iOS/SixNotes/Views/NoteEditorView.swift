@@ -21,23 +21,22 @@ struct NoteEditorView: View {
             ZStack(alignment: .bottomTrailing) {
                 VStack(spacing: 0) {
                     // Revealed toolbar
-                    if showToolbar || dragOffset > 0 {
-                        HStack {
-                            Spacer()
-                            Button {
-                                showShareSheet = true
-                            } label: {
-                                Image(systemName: "square.and.arrow.up")
-                                    .font(.title3)
-                                    .foregroundStyle(.primary)
-                                    .frame(width: 44, height: 44)
-                            }
+                    HStack {
+                        Spacer()
+                        Button {
+                            showShareSheet = true
+                        } label: {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.title3)
+                                .foregroundStyle(.primary)
+                                .frame(width: 44, height: 44)
                         }
-                        .padding(.horizontal, 8)
-                        .frame(height: showToolbar ? toolbarHeight : min(toolbarHeight, dragOffset))
-                        .background(Color(uiColor: .secondarySystemBackground))
-                        .opacity(showToolbar ? 1.0 : min(1.0, dragOffset / revealThreshold))
                     }
+                    .padding(.horizontal, 8)
+                    .frame(height: showToolbar ? toolbarHeight : (dragOffset > 0 ? min(toolbarHeight, dragOffset) : 0))
+                    .background(Color(uiColor: .secondarySystemBackground))
+                    .opacity(showToolbar ? 1.0 : min(1.0, dragOffset / revealThreshold))
+                    .clipped()
 
                     TextEditor(text: notesManager.noteBinding(for: noteIndex))
                         .font(notesManager.textFont.font)
