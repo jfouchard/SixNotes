@@ -8,7 +8,6 @@ struct NoteEditorView: View {
     @State private var showShareSheet = false
     @State private var showToolbar = false
     @State private var dragOffset: CGFloat = 0
-    @State private var shareCompleted = false
 
     private let toolbarHeight: CGFloat = 44
     private let revealThreshold: CGFloat = 50
@@ -102,27 +101,16 @@ struct NoteEditorView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             keyboardHeight = 0
         }
-        .onChange(of: showShareSheet) { _, isShowing in
-            if isShowing {
-                // Reset when sheet opens
-                shareCompleted = false
-            }
-        }
         .sheet(isPresented: $showShareSheet, onDismiss: {
-            // Only animate away if share was completed
-            if shareCompleted {
-                // Small delay to let sheet dismiss animation complete
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
-                        dragOffset = 0
-                        showToolbar = false
-                    }
+            // Small delay to let sheet dismiss animation complete
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
+                    dragOffset = 0
+                    showToolbar = false
                 }
             }
         }) {
-            ShareSheet(items: [currentNoteContent]) { completed in
-                shareCompleted = completed
-            }
+            ShareSheet(items: [currentNoteContent])
         }
     }
 }
