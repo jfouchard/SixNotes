@@ -5,7 +5,6 @@ struct NoteEditorView: View {
     @EnvironmentObject var notesManager: NotesManager
     @FocusState private var isFocused: Bool
     @State private var keyboardHeight: CGFloat = 0
-    @State private var showShareSheet = false
     @State private var showToolbar = false
     @State private var dragOffset: CGFloat = 0
 
@@ -14,6 +13,30 @@ struct NoteEditorView: View {
 
     private var currentNoteContent: String {
         notesManager.notes[noteIndex].content
+    }
+
+    private func presentShareSheet() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootVC = windowScene.windows.first?.rootViewController else { return }
+
+        let activityVC = UIActivityViewController(activityItems: [currentNoteContent], applicationActivities: nil)
+        activityVC.completionWithItemsHandler = { activityType, completed, returnedItems, error in
+            if completed {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
+                        dragOffset = 0
+                        showToolbar = false
+                    }
+                }
+            }
+        }
+
+        // Find the topmost presented controller
+        var topVC = rootVC
+        while let presented = topVC.presentedViewController {
+            topVC = presented
+        }
+        topVC.present(activityVC, animated: true)
     }
 
     private var revealedAmount: CGFloat {
@@ -28,7 +51,7 @@ struct NoteEditorView: View {
                     HStack {
                         Spacer()
                         Button {
-                            showShareSheet = true
+                            presentShareSheet()
                         } label: {
                             Image(systemName: "square.and.arrow.up")
                                 .font(.title3)
@@ -100,17 +123,6 @@ struct NoteEditorView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             keyboardHeight = 0
-        }
-        .sheet(isPresented: $showShareSheet, onDismiss: {
-            // Small delay to let sheet dismiss animation complete
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
-                    dragOffset = 0
-                    showToolbar = false
-                }
-            }
-        }) {
-            ShareSheet(items: [currentNoteContent])
         }
     }
 }
