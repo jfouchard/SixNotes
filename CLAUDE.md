@@ -71,6 +71,39 @@ macOS/SixNotes/
 - `SixNotes.textFont`: Text font settings
 - `SixNotes.codeFont`: Code font settings
 
+## Testing
+
+**Always write tests for new features.** Tests are located in platform-specific test targets:
+
+```
+iOS/SixNotesTests/
+├── NoteTests.swift
+├── FontSettingTests.swift
+└── NotesManagerTests.swift
+
+macOS/SixNotesTests/
+├── NoteTests.swift
+├── FontSettingTests.swift
+└── NotesManagerTests.swift
+```
+
+### Running Tests
+
+```bash
+# macOS
+xcodebuild test -project macOS/SixNotes.xcodeproj -scheme SixNotes -destination 'platform=macOS'
+
+# iOS (requires simulator)
+xcodebuild test -project iOS/SixNotes.xcodeproj -scheme SixNotes -destination 'platform=iOS Simulator,name=iPhone 17'
+```
+
+### Test Guidelines
+
+- Test models (Note, FontSetting) for Codable conformance and initialization
+- Test NotesManager for state management, persistence, and validation logic
+- Clear UserDefaults in setUp/tearDown to ensure test isolation
+- Platform-specific tests: use UIFont on iOS, NSFont on macOS
+
 ## Deployment Targets
 
 - iOS: 16.0+
