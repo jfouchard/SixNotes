@@ -19,7 +19,10 @@ jobs:
           xcodebuild test \
             -project macOS/SixNotes.xcodeproj \
             -scheme SixNotes \
-            -destination 'platform=macOS'
+            -destination 'platform=macOS' \
+            CODE_SIGN_IDENTITY=- \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
 
   test-ios:
     name: iOS Tests
