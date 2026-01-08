@@ -61,18 +61,18 @@ struct NoteEditorView: View {
                             }
                             // Track upward drags to hide toolbar
                             if showToolbar && value.translation.height < -20 {
-                                withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
+                                withAnimation(.interpolatingSpring(stiffness: 75, damping: 15)) {
                                     showToolbar = false
                                 }
                             }
                         }
                         .onEnded { value in
                             if !showToolbar && dragOffset >= revealThreshold {
-                                withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
+                                withAnimation(.interpolatingSpring(stiffness: 75, damping: 15)) {
                                     showToolbar = true
                                 }
                             }
-                            withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
+                            withAnimation(.interpolatingSpring(stiffness: 75, damping: 15)) {
                                 dragOffset = 0
                             }
                         }
@@ -105,7 +105,7 @@ struct NoteEditorView: View {
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(items: [currentNoteContent]) { completed in
                 if completed {
-                    withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
+                    withAnimation(.interpolatingSpring(stiffness: 75, damping: 15)) {
                         showToolbar = false
                     }
                 }
