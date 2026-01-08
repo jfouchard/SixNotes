@@ -160,21 +160,25 @@ struct ShareRichTextButton: View {
     }
 
     private func share() {
-        // Get RTF data from the attributed string
+        // Write rich text to pasteboard, then show sharing picker with the attributed string
         let attributedString = PreviewTextStorage.shared.attributedString
         let range = NSRange(location: 0, length: attributedString.length)
 
-        // Create RTF data and wrap in NSPasteboardItem
-        if let rtfData = try? attributedString.data(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]) {
-            let pasteboardItem = NSPasteboardItem()
-            pasteboardItem.setData(rtfData, forType: .rtf)
-            pasteboardItem.setString(attributedString.string, forType: .string)
+        // Write to general pasteboard first (like copy does)
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.writeObjects([attributedString])
 
-            let picker = NSSharingServicePicker(items: [pasteboardItem])
-            if let contentView = NSApp.keyWindow?.contentView {
-                let rect = NSRect(x: contentView.bounds.maxX - 40, y: contentView.bounds.maxY - 28, width: 1, height: 1)
-                picker.show(relativeTo: rect, of: contentView, preferredEdge: .minY)
-            }
+        // Also try to add RTF data explicitly
+        if let rtfData = try? attributedString.data(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]) {
+            pasteboard.setData(rtfData, forType: .rtf)
+        }
+
+        // Show picker - services should pick up from pasteboard
+        let picker = NSSharingServicePicker(items: [attributedString])
+        if let contentView = NSApp.keyWindow?.contentView {
+            let rect = NSRect(x: contentView.bounds.maxX - 40, y: contentView.bounds.maxY - 28, width: 1, height: 1)
+            picker.show(relativeTo: rect, of: contentView, preferredEdge: .minY)
         }
     }
 }
