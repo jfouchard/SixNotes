@@ -1,5 +1,4 @@
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct ContentView: View {
     @EnvironmentObject var notesManager: NotesManager
@@ -161,56 +160,22 @@ struct ShareRichTextButton: View {
     }
 
     private func share() {
-        // Wrap the attributed string to provide RTF/HTML data representations
+        // Get RTF data from the attributed string
         let attributedString = PreviewTextStorage.shared.attributedString
-        let richTextItem = RichTextSharingItem(attributedString)
-        let picker = NSSharingServicePicker(items: [richTextItem])
-        if let contentView = NSApp.keyWindow?.contentView {
-            let rect = NSRect(x: contentView.bounds.maxX - 40, y: contentView.bounds.maxY - 28, width: 1, height: 1)
-            picker.show(relativeTo: rect, of: contentView, preferredEdge: .minY)
-        }
-    }
-}
-
-// Wrapper that provides rich text for sharing via NSItemProvider
-class RichTextSharingItem: NSObject, NSItemProviderWriting {
-    let attributedString: NSAttributedString
-
-    init(_ attributedString: NSAttributedString) {
-        self.attributedString = attributedString
-    }
-
-    static var writableTypeIdentifiersForItemProvider: [String] {
-        [UTType.rtf.identifier, UTType.html.identifier, UTType.plainText.identifier]
-    }
-
-    func loadData(withTypeIdentifier typeIdentifier: String, forItemProviderCompletionHandler completionHandler: @escaping @Sendable (Data?, Error?) -> Void) -> Progress? {
         let range = NSRange(location: 0, length: attributedString.length)
 
-        do {
-            if typeIdentifier == UTType.rtf.identifier {
-                let data = try attributedString.data(
-                    from: range,
-                    documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]
-                )
-                completionHandler(data, nil)
-            } else if typeIdentifier == UTType.html.identifier {
-                let data = try attributedString.data(
-                    from: range,
-                    documentAttributes: [.documentType: NSAttributedString.DocumentType.html]
-                )
-                completionHandler(data, nil)
-            } else if typeIdentifier == UTType.plainText.identifier {
-                let data = attributedString.string.data(using: .utf8)
-                completionHandler(data, nil)
-            } else {
-                completionHandler(nil, nil)
-            }
-        } catch {
-            completionHandler(nil, error)
-        }
+        // Create RTF data and wrap in NSPasteboardItem
+        if let rtfData = try? attributedString.data(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]) {
+            let pasteboardItem = NSPasteboardItem()
+            pasteboardItem.setData(rtfData, forType: .rtf)
+            pasteboardItem.setString(attributedString.string, forType: .string)
 
-        return nil
+            let picker = NSSharingServicePicker(items: [pasteboardItem])
+            if let contentView = NSApp.keyWindow?.contentView {
+                let rect = NSRect(x: contentView.bounds.maxX - 40, y: contentView.bounds.maxY - 28, width: 1, height: 1)
+                picker.show(relativeTo: rect, of: contentView, preferredEdge: .minY)
+            }
+        }
     }
 }
 
