@@ -8,9 +8,11 @@ struct NoteEditorView: View {
     @State private var showToolbar = false
     @State private var dragOffset: CGFloat = 0
     @State private var showShareSheet = false
+    @State private var isDraggingVertically: Bool? = nil
 
     private let toolbarHeight: CGFloat = 44
     private let revealThreshold: CGFloat = 50
+    private let dragResistance: CGFloat = 0.4
 
     private var currentNoteContent: String {
         notesManager.notes[noteIndex].content
@@ -48,42 +50,47 @@ struct NoteEditorView: View {
                         .padding(.top, 8)
                 }
                 .offset(y: revealedAmount - toolbarHeight)
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 10)
+                        .onChanged { value in
+                            // Determine direction on first significant movement
+                            if isDraggingVertically == nil {
+                                let isVertical = abs(value.translation.height) > abs(value.translation.width)
+                                isDraggingVertically = isVertical
+                            }
 
-                // Drag handle area at the top for revealing toolbar
-                VStack {
-                    Color.clear
-                        .frame(height: showToolbar ? toolbarHeight + 50 : 50)
-                        .contentShape(Rectangle())
-                        .gesture(
-                            DragGesture(minimumDistance: 5)
-                                .onChanged { value in
-                                    // Only track downward drags when toolbar is hidden
-                                    if !showToolbar && value.translation.height > 0 {
-                                        dragOffset = value.translation.height
-                                    }
-                                    // Track upward drags to hide toolbar
-                                    if showToolbar {
-                                        dragOffset = toolbarHeight + value.translation.height
-                                    }
+                            // Only handle if we determined this is a vertical drag
+                            guard isDraggingVertically == true else { return }
+
+                            // Only track downward drags when toolbar is hidden (with resistance)
+                            if !showToolbar && value.translation.height > 0 {
+                                dragOffset = value.translation.height * dragResistance
+                            }
+                            // Track upward drags to hide toolbar
+                            if showToolbar {
+                                dragOffset = toolbarHeight + value.translation.height
+                            }
+                        }
+                        .onEnded { value in
+                            defer { isDraggingVertically = nil }
+
+                            guard isDraggingVertically == true else { return }
+
+                            if dragOffset >= revealThreshold {
+                                // Snap to fully revealed
+                                withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
+                                    dragOffset = toolbarHeight
+                                    showToolbar = true
                                 }
-                                .onEnded { value in
-                                    if dragOffset >= revealThreshold {
-                                        // Snap to fully revealed
-                                        withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
-                                            dragOffset = toolbarHeight
-                                            showToolbar = true
-                                        }
-                                    } else {
-                                        // Snap to hidden
-                                        withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
-                                            dragOffset = 0
-                                            showToolbar = false
-                                        }
-                                    }
+                            } else {
+                                // Snap to hidden
+                                withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
+                                    dragOffset = 0
+                                    showToolbar = false
                                 }
-                        )
-                    Spacer()
-                }
+                            }
+                        }
+                )
 
                 // Done button that appears only when software keyboard is up
                 if keyboardHeight > 0 {
