@@ -25,8 +25,10 @@ struct MarkdownTextView: NSViewRepresentable {
 
         textView.isEditable = false
         textView.isSelectable = true
+        textView.isRichText = true
         textView.backgroundColor = .clear
         textView.drawsBackground = false
+        textView.textContainerInset = NSSize(width: 16, height: 16)
 
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
