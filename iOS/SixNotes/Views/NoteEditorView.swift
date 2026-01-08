@@ -50,11 +50,13 @@ struct NoteEditorView: View {
                         .padding(.top, 8)
                 }
                 .offset(y: revealedAmount - toolbarHeight)
+                .allowsHitTesting(true)
+                .contentShape(Rectangle())
                 .simultaneousGesture(
-                    DragGesture(minimumDistance: 10)
+                    DragGesture(minimumDistance: 0)
                         .onChanged { value in
-                            // Determine direction on first significant movement
-                            if isDraggingVertically == nil {
+                            // Determine direction on first significant movement (after 15pt)
+                            if isDraggingVertically == nil && (abs(value.translation.height) > 15 || abs(value.translation.width) > 15) {
                                 let isVertical = abs(value.translation.height) > abs(value.translation.width)
                                 isDraggingVertically = isVertical
                             }
@@ -72,9 +74,10 @@ struct NoteEditorView: View {
                             }
                         }
                         .onEnded { value in
-                            defer { isDraggingVertically = nil }
+                            let wasVertical = isDraggingVertically == true
+                            isDraggingVertically = nil
 
-                            guard isDraggingVertically == true else { return }
+                            guard wasVertical else { return }
 
                             if dragOffset >= revealThreshold {
                                 // Snap to fully revealed
