@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var notesManager: NotesManager
     @State private var showSettings = false
+    @State private var isWindowFocused = true
 
     private var currentNoteContent: String {
         notesManager.notes[notesManager.selectedNoteIndex].content
@@ -35,6 +36,8 @@ struct ContentView: View {
                     .padding(.trailing, 8)
             }
             .frame(height: 28)
+            .opacity(isWindowFocused ? 1.0 : 0.4)
+            .animation(.easeInOut(duration: 0.2), value: isWindowFocused)
 
             // Note editor
             NoteEditorView()
@@ -52,6 +55,15 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .togglePreview)) { _ in
             PreviewWindowController.shared.toggle(notesManager: notesManager)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
+            isWindowFocused = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in
+            // Only dim if no window in our app is key (e.g., switched to another app)
+            DispatchQueue.main.async {
+                isWindowFocused = NSApp.keyWindow != nil
+            }
         }
     }
 }
