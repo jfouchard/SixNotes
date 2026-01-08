@@ -3,9 +3,28 @@ import SwiftUI
 struct MainTabView: View {
     @EnvironmentObject var notesManager: NotesManager
     @State private var selectedTab = 0
+    @State private var showShareSheet = false
+
+    private var currentNoteContent: String {
+        notesManager.notes[selectedTab].content
+    }
 
     var body: some View {
         VStack(spacing: 0) {
+            // Top bar with share button
+            HStack {
+                Spacer()
+                Button {
+                    showShareSheet = true
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.title3)
+                        .foregroundStyle(.primary)
+                }
+                .padding(.trailing, 16)
+                .padding(.top, 8)
+            }
+
             // Swipeable note editors
             TabView(selection: $selectedTab) {
                 ForEach(0..<6, id: \.self) { index in
@@ -50,7 +69,20 @@ struct MainTabView: View {
         .onAppear {
             selectedTab = notesManager.selectedNoteIndex
         }
+        .sheet(isPresented: $showShareSheet) {
+            ShareSheet(items: [currentNoteContent])
+        }
     }
+}
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #Preview {

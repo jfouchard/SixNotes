@@ -4,6 +4,10 @@ struct ContentView: View {
     @EnvironmentObject var notesManager: NotesManager
     @State private var showSettings = false
 
+    private var currentNoteContent: String {
+        notesManager.notes[notesManager.selectedNoteIndex].content
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Title bar area
@@ -25,6 +29,17 @@ struct ContentView: View {
                 }
 
                 Spacer()
+
+                // Share button
+                Button {
+                    shareCurrentNote()
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, 8)
             }
             .frame(height: 28)
 
@@ -44,6 +59,17 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .togglePreview)) { _ in
             PreviewWindowController.shared.toggle(notesManager: notesManager)
+        }
+    }
+
+    private func shareCurrentNote() {
+        let picker = NSSharingServicePicker(items: [currentNoteContent])
+        if let button = NSApp.keyWindow?.contentView?.subviews.first(where: { view in
+            view is NSButton
+        }) {
+            picker.show(relativeTo: .zero, of: button, preferredEdge: .minY)
+        } else if let contentView = NSApp.keyWindow?.contentView {
+            picker.show(relativeTo: contentView.bounds, of: contentView, preferredEdge: .minY)
         }
     }
 }
