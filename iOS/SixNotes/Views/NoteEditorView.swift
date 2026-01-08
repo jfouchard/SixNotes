@@ -20,6 +20,7 @@ struct NoteEditorView: View {
               let rootVC = windowScene.windows.first?.rootViewController else { return }
 
         let activityVC = UIActivityViewController(activityItems: [currentNoteContent], applicationActivities: nil)
+        activityVC.modalPresentationStyle = .pageSheet
         activityVC.completionWithItemsHandler = { activityType, completed, returnedItems, error in
             if completed {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -31,7 +32,6 @@ struct NoteEditorView: View {
             }
         }
 
-        // On iPhone, UIActivityViewController is presented as a sheet with built-in dismiss
         // On iPad, it needs to be presented from a popover
         if UIDevice.current.userInterfaceIdiom == .pad {
             activityVC.popoverPresentationController?.sourceView = rootVC.view
