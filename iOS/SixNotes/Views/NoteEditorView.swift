@@ -64,13 +64,13 @@ struct NoteEditorView: View {
                         .onEnded { value in
                             if dragOffset >= revealThreshold {
                                 // Snap to fully revealed
-                                withAnimation(.interpolatingSpring(stiffness: 75, damping: 15)) {
+                                withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
                                     dragOffset = toolbarHeight
                                     showToolbar = true
                                 }
                             } else {
                                 // Snap to hidden
-                                withAnimation(.interpolatingSpring(stiffness: 75, damping: 15)) {
+                                withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
                                     dragOffset = 0
                                     showToolbar = false
                                 }
@@ -102,13 +102,18 @@ struct NoteEditorView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             keyboardHeight = 0
         }
+        .onChange(of: showShareSheet) { _, isShowing in
+            if isShowing {
+                // Reset when sheet opens
+                shareCompleted = false
+            }
+        }
         .sheet(isPresented: $showShareSheet, onDismiss: {
             // Only animate away if share was completed
             if shareCompleted {
-                shareCompleted = false
                 // Small delay to let sheet dismiss animation complete
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    withAnimation(.interpolatingSpring(stiffness: 75, damping: 15)) {
+                    withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
                         dragOffset = 0
                         showToolbar = false
                     }
