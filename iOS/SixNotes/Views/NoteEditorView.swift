@@ -7,6 +7,8 @@ struct NoteEditorView: View {
     @State private var keyboardHeight: CGFloat = 0
     @State private var showToolbar = false
     @State private var dragOffset: CGFloat = 0
+    @State private var showShareSheet = false
+    @State private var shareCompleted = false
 
     private let toolbarHeight: CGFloat = 44
     private let revealThreshold: CGFloat = 50
@@ -15,42 +17,13 @@ struct NoteEditorView: View {
         notesManager.notes[noteIndex].content
     }
 
-    private func presentShareSheet() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootVC = windowScene.windows.first?.rootViewController else { return }
-
-        let activityVC = UIActivityViewController(activityItems: [currentNoteContent], applicationActivities: nil)
-        activityVC.modalPresentationStyle = .pageSheet
-        activityVC.completionWithItemsHandler = { activityType, completed, returnedItems, error in
-            if completed {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
-                        dragOffset = 0
-                        showToolbar = false
-                    }
-                }
+    private func hideToolbar() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation(.interpolatingSpring(stiffness: 150, damping: 20)) {
+                dragOffset = 0
+                showToolbar = false
             }
         }
-
-        // On iPad, it needs to be presented from a popover
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            activityVC.popoverPresentationController?.sourceView = rootVC.view
-            activityVC.popoverPresentationController?.sourceRect = CGRect(x: rootVC.view.bounds.midX, y: 100, width: 0, height: 0)
-        }
-
-        // Find the topmost presented controller
-        var topVC = rootVC
-        while let presented = topVC.presentedViewController {
-            topVC = presented
-        }
-
-        // Force the sheet presentation style
-        if let sheet = activityVC.sheetPresentationController {
-            sheet.detents = [.medium(), .large()]
-            sheet.prefersGrabberVisible = true
-        }
-
-        topVC.present(activityVC, animated: true)
     }
 
     private var revealedAmount: CGFloat {
@@ -65,7 +38,8 @@ struct NoteEditorView: View {
                     HStack {
                         Spacer()
                         Button {
-                            presentShareSheet()
+                            shareCompleted = false
+                            showShareSheet = true
                         } label: {
                             Image(systemName: "square.and.arrow.up")
                                 .font(.title3)
@@ -138,7 +112,32 @@ struct NoteEditorView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             keyboardHeight = 0
         }
+        .sheet(isPresented: $showShareSheet, onDismiss: {
+            if shareCompleted {
+                hideToolbar()
+            }
+        }) {
+            ShareSheetWithCompletion(items: [currentNoteContent]) { completed in
+                shareCompleted = completed
+            }
+            .presentationDetents([.medium, .large])
+        }
     }
+}
+
+struct ShareSheetWithCompletion: UIViewControllerRepresentable {
+    let items: [Any]
+    let onComplete: (Bool) -> Void
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        controller.completionWithItemsHandler = { _, completed, _, _ in
+            onComplete(completed)
+        }
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #Preview {
