@@ -106,15 +106,28 @@ struct NoteDot: View {
     let isSelected: Bool
     let hasContent: Bool
 
+    static let noteColors: [Color] = [
+        Color(red: 0.90, green: 0.30, blue: 0.35),  // Red
+        Color(red: 0.95, green: 0.55, blue: 0.25),  // Orange
+        Color(red: 0.95, green: 0.75, blue: 0.25),  // Yellow
+        Color(red: 0.40, green: 0.78, blue: 0.45),  // Green
+        Color(red: 0.35, green: 0.60, blue: 0.90),  // Blue
+        Color(red: 0.70, green: 0.45, blue: 0.85),  // Purple
+    ]
+
+    var noteColor: Color {
+        NoteDot.noteColors[index]
+    }
+
     var body: some View {
         ZStack {
             Circle()
-                .fill(isSelected ? Color.accentColor : (hasContent ? Color.secondary.opacity(0.5) : Color.secondary.opacity(0.2)))
+                .fill(isSelected ? noteColor : (hasContent ? noteColor.opacity(0.5) : noteColor.opacity(0.25)))
                 .frame(width: 10, height: 10)
 
             if isSelected {
                 Circle()
-                    .stroke(Color.accentColor.opacity(0.3), lineWidth: 2)
+                    .stroke(noteColor.opacity(0.4), lineWidth: 2)
                     .frame(width: 16, height: 16)
             }
         }
