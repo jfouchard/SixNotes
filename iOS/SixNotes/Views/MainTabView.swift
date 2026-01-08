@@ -6,17 +6,9 @@ struct MainTabView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Swipeable note editors
-            TabView(selection: $selectedTab) {
-                ForEach(0..<6, id: \.self) { index in
-                    NoteEditorView(noteIndex: index)
-                        .tag(index)
-                }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .onChange(of: selectedTab) { _, newValue in
-                notesManager.selectNote(newValue)
-            }
+            // Note editor (no swipe navigation)
+            NoteEditorView(noteIndex: selectedTab)
+                .id(selectedTab)
 
             // Custom tab bar
             HStack(spacing: 24) {
