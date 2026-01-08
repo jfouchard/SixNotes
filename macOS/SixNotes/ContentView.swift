@@ -4,6 +4,10 @@ struct ContentView: View {
     @EnvironmentObject var notesManager: NotesManager
     @State private var showSettings = false
 
+    private var currentNoteContent: String {
+        notesManager.notes[notesManager.selectedNoteIndex].content
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Title bar area
@@ -25,6 +29,10 @@ struct ContentView: View {
                 }
 
                 Spacer()
+
+                // Share button
+                ShareButton(content: currentNoteContent)
+                    .padding(.trailing, 8)
             }
             .frame(height: 28)
 
@@ -94,10 +102,37 @@ class PreviewWindowController {
 struct PreviewWindowContent: View {
     @EnvironmentObject var notesManager: NotesManager
 
+    private var currentNoteContent: String {
+        notesManager.notes[notesManager.selectedNoteIndex].content
+    }
+
     var body: some View {
-        MarkdownPreviewView(content: notesManager.notes[notesManager.selectedNoteIndex].content)
+        MarkdownPreviewView(content: currentNoteContent)
             .environmentObject(notesManager)
             .frame(minWidth: 300, minHeight: 200)
+    }
+}
+
+struct ShareButton: View {
+    let content: String
+
+    var body: some View {
+        Button {
+            share()
+        } label: {
+            Image(systemName: "square.and.arrow.up")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func share() {
+        let picker = NSSharingServicePicker(items: [content])
+        if let contentView = NSApp.keyWindow?.contentView {
+            let rect = NSRect(x: contentView.bounds.maxX - 40, y: contentView.bounds.maxY - 28, width: 1, height: 1)
+            picker.show(relativeTo: rect, of: contentView, preferredEdge: .minY)
+        }
     }
 }
 

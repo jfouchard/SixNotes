@@ -15,17 +15,9 @@ struct MainTabView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Swipeable note editors
-            TabView(selection: $selectedTab) {
-                ForEach(0..<6, id: \.self) { index in
-                    NoteEditorView(noteIndex: index)
-                        .tag(index)
-                }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .onChange(of: selectedTab) { _, newValue in
-                notesManager.selectNote(newValue)
-            }
+            // Note editor (no swipe navigation)
+            NoteEditorView(noteIndex: selectedTab)
+                .id(selectedTab)
 
             // Custom tab bar
             HStack(spacing: 24) {
@@ -59,6 +51,37 @@ struct MainTabView: View {
         }
         .onAppear {
             selectedTab = notesManager.selectedNoteIndex
+        }
+    }
+}
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+    var onComplete: ((Bool) -> Void)? = nil
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onComplete: onComplete)
+    }
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        controller.completionWithItemsHandler = context.coordinator.completionHandler
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
+        context.coordinator.onComplete = onComplete
+    }
+
+    class Coordinator {
+        var onComplete: ((Bool) -> Void)?
+
+        init(onComplete: ((Bool) -> Void)?) {
+            self.onComplete = onComplete
+        }
+
+        lazy var completionHandler: UIActivityViewController.CompletionWithItemsHandler = { [weak self] activityType, completed, returnedItems, error in
+            self?.onComplete?(completed)
         }
     }
 }

@@ -38,4 +38,4 @@ jobs:
           xcodebuild test \
             -project iOS/SixNotes.xcodeproj \
             -scheme SixNotes \
-            -destination 'platform=iOS Simulator,name=iPhone 16'
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=26.1'
