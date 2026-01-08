@@ -43,6 +43,13 @@ struct NoteEditorView: View {
         while let presented = topVC.presentedViewController {
             topVC = presented
         }
+
+        // Force the sheet presentation style
+        if let sheet = activityVC.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.prefersGrabberVisible = true
+        }
+
         topVC.present(activityVC, animated: true)
     }
 
