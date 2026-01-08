@@ -1,0 +1,38 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-macos:
+    name: macOS Tests
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Run macOS Tests
+        run: |
+          xcodebuild test \
+            -project macOS/SixNotes.xcodeproj \
+            -scheme SixNotes \
+            -destination 'platform=macOS'
+
+  test-ios:
+    name: iOS Tests
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Run iOS Tests
+        run: |
+          xcodebuild test \
+            -project iOS/SixNotes.xcodeproj \
+            -scheme SixNotes \
+            -destination 'platform=iOS Simulator,name=iPhone 16'
