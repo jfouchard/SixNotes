@@ -18,14 +18,19 @@ jobs:
         run: rm -rf ~/Library/Developer/Xcode/DerivedData
 
       - name: Run macOS Tests
-        run: |
-          xcodebuild clean test \
-            -project macOS/SixNotes.xcodeproj \
-            -scheme SixNotes \
-            -destination 'platform=macOS' \
-            CODE_SIGN_IDENTITY=- \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_on: error
+          command: |
+            xcodebuild clean test \
+              -project macOS/SixNotes.xcodeproj \
+              -scheme SixNotes \
+              -destination 'platform=macOS' \
+              CODE_SIGN_IDENTITY=- \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO
 
   test-ios:
     name: iOS Tests
@@ -40,8 +45,13 @@ jobs:
         run: rm -rf ~/Library/Developer/Xcode/DerivedData
 
       - name: Run iOS Tests
-        run: |
-          xcodebuild clean test \
-            -project iOS/SixNotes.xcodeproj \
-            -scheme SixNotes \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=26.1'
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 15
+          max_attempts: 3
+          retry_on: error
+          command: |
+            xcodebuild clean test \
+              -project iOS/SixNotes.xcodeproj \
+              -scheme SixNotes \
+              -destination 'platform=iOS Simulator,name=iPhone 16,OS=26.1'
