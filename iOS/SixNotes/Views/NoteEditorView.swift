@@ -8,7 +8,7 @@ struct NoteEditorView: View {
     @State private var showToolbar = false
     @State private var dragOffset: CGFloat = 0
     @State private var showShareSheet = false
-    @State private var findInteraction: UIFindInteraction?
+    @StateObject private var textEditorCoordinator = FindableTextEditorCoordinator()
 
     private let toolbarHeight: CGFloat = 44
     private let revealThreshold: CGFloat = 50
@@ -30,7 +30,7 @@ struct NoteEditorView: View {
                     HStack {
                         Spacer()
                         Button {
-                            findInteraction?.presentFindNavigator(showingReplace: false)
+                            textEditorCoordinator.presentFind()
                         } label: {
                             Image(systemName: "magnifyingglass")
                                 .font(.title3)
@@ -53,9 +53,7 @@ struct NoteEditorView: View {
                     FindableTextEditor(
                         text: notesManager.noteBinding(for: noteIndex),
                         font: notesManager.textFont.uiFont,
-                        onFindInteraction: { interaction in
-                            findInteraction = interaction
-                        }
+                        coordinator: textEditorCoordinator
                     )
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -127,7 +125,7 @@ struct NoteEditorView: View {
 struct FindableTextEditor: UIViewRepresentable {
     @Binding var text: String
     var font: UIFont
-    var onFindInteraction: (UIFindInteraction?) -> Void
+    var coordinator: FindableTextEditorCoordinator
 
     func makeUIView(context: Context) -> UITextView {
         let textView = UITextView()
@@ -138,7 +136,9 @@ struct FindableTextEditor: UIViewRepresentable {
 
         // Enable find interaction (iOS 16+)
         textView.isFindInteractionEnabled = true
-        onFindInteraction(textView.findInteraction)
+
+        // Store reference in coordinator for find operations
+        context.coordinator.textView = textView
 
         // Configure for editing
         textView.isEditable = true
@@ -151,6 +151,9 @@ struct FindableTextEditor: UIViewRepresentable {
     }
 
     func updateUIView(_ textView: UITextView, context: Context) {
+        // Update text binding reference for coordinator
+        context.coordinator.textBinding = $text
+
         if textView.text != text {
             let selectedRange = textView.selectedRange
             textView.text = text
@@ -163,22 +166,26 @@ struct FindableTextEditor: UIViewRepresentable {
         if textView.font != font {
             textView.font = font
         }
+
+        // Keep coordinator reference updated
+        context.coordinator.textView = textView
     }
 
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+    func makeCoordinator() -> FindableTextEditorCoordinator {
+        coordinator
+    }
+}
+
+class FindableTextEditorCoordinator: NSObject, UITextViewDelegate, ObservableObject {
+    var textView: UITextView?
+    var textBinding: Binding<String>?
+
+    func textViewDidChange(_ textView: UITextView) {
+        textBinding?.wrappedValue = textView.text
     }
 
-    class Coordinator: NSObject, UITextViewDelegate {
-        var parent: FindableTextEditor
-
-        init(_ parent: FindableTextEditor) {
-            self.parent = parent
-        }
-
-        func textViewDidChange(_ textView: UITextView) {
-            parent.text = textView.text
-        }
+    func presentFind() {
+        textView?.findInteraction?.presentFindNavigator(showingReplace: false)
     }
 }
 
