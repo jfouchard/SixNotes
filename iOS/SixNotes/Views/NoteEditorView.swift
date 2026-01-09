@@ -8,6 +8,7 @@ struct NoteEditorView: View {
     @State private var showToolbar = false
     @State private var dragOffset: CGFloat = 0
     @State private var showShareSheet = false
+    @State private var findInteraction: UIFindInteraction?
 
     private let toolbarHeight: CGFloat = 44
     private let revealThreshold: CGFloat = 50
@@ -29,6 +30,14 @@ struct NoteEditorView: View {
                     HStack {
                         Spacer()
                         Button {
+                            findInteraction?.presentFindNavigator(showingReplace: false)
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                                .font(.title3)
+                                .foregroundStyle(.primary)
+                                .frame(width: 44, height: 44)
+                        }
+                        Button {
                             showShareSheet = true
                         } label: {
                             Image(systemName: "square.and.arrow.up")
@@ -41,12 +50,15 @@ struct NoteEditorView: View {
                     .frame(height: toolbarHeight)
                     .background(Color(uiColor: .secondarySystemBackground))
 
-                    TextEditor(text: notesManager.noteBinding(for: noteIndex))
-                        .font(notesManager.textFont.font)
-                        .focused($isFocused)
-                        .scrollContentBackground(.hidden)
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
+                    FindableTextEditor(
+                        text: notesManager.noteBinding(for: noteIndex),
+                        font: notesManager.textFont.uiFont,
+                        onFindInteraction: { interaction in
+                            findInteraction = interaction
+                        }
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
                 }
                 .offset(y: revealedAmount - toolbarHeight)
                 .simultaneousGesture(
@@ -106,6 +118,66 @@ struct NoteEditorView: View {
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(items: [currentNoteContent])
                 .presentationDetents([.medium, .large])
+        }
+    }
+}
+
+// MARK: - FindableTextEditor
+
+struct FindableTextEditor: UIViewRepresentable {
+    @Binding var text: String
+    var font: UIFont
+    var onFindInteraction: (UIFindInteraction?) -> Void
+
+    func makeUIView(context: Context) -> UITextView {
+        let textView = UITextView()
+        textView.delegate = context.coordinator
+        textView.font = font
+        textView.backgroundColor = .clear
+        textView.text = text
+
+        // Enable find interaction (iOS 16+)
+        textView.isFindInteractionEnabled = true
+        onFindInteraction(textView.findInteraction)
+
+        // Configure for editing
+        textView.isEditable = true
+        textView.isSelectable = true
+        textView.allowsEditingTextAttributes = false
+        textView.autocapitalizationType = .sentences
+        textView.autocorrectionType = .default
+
+        return textView
+    }
+
+    func updateUIView(_ textView: UITextView, context: Context) {
+        if textView.text != text {
+            let selectedRange = textView.selectedRange
+            textView.text = text
+            // Restore selection if possible
+            if selectedRange.location <= text.count {
+                textView.selectedRange = selectedRange
+            }
+        }
+
+        if textView.font != font {
+            textView.font = font
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    class Coordinator: NSObject, UITextViewDelegate {
+        var parent: FindableTextEditor
+
+        init(_ parent: FindableTextEditor) {
+            self.parent = parent
+        }
+
+        func textViewDidChange(_ textView: UITextView) {
+            parent.text = textView.text
         }
     }
 }
