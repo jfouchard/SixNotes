@@ -37,6 +37,8 @@ struct SixNotesApp: App {
                     .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: .command)
                 }
             }
+            // Enable Edit > Find menu with Cmd+F
+            TextEditingCommands()
         }
     }
 
