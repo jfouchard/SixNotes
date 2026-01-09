@@ -139,7 +139,7 @@ struct FindableTextEditor: UIViewRepresentable {
 
         // Store reference in coordinator for find operations
         context.coordinator.textView = textView
-        context.coordinator.observeFindInteraction()
+        context.coordinator.startObservingFindVisibility()
 
         // Configure for editing
         textView.isEditable = true
@@ -182,7 +182,7 @@ class FindableTextEditorCoordinator: NSObject, UITextViewDelegate, ObservableObj
     var textBinding: Binding<String>?
     @Published var isFindVisible = false
 
-    private var findObservation: NSKeyValueObservation?
+    private var displayLink: CADisplayLink?
 
     func textViewDidChange(_ textView: UITextView) {
         textBinding?.wrappedValue = textView.text
@@ -192,12 +192,26 @@ class FindableTextEditorCoordinator: NSObject, UITextViewDelegate, ObservableObj
         textView?.findInteraction?.presentFindNavigator(showingReplace: false)
     }
 
-    func observeFindInteraction() {
-        findObservation = textView?.findInteraction?.observe(\.isFindNavigatorVisible, options: [.new]) { [weak self] _, change in
-            DispatchQueue.main.async {
-                self?.isFindVisible = change.newValue ?? false
-            }
+    func startObservingFindVisibility() {
+        displayLink = CADisplayLink(target: self, selector: #selector(checkFindVisibility))
+        displayLink?.preferredFrameRateRange = CAFrameRateRange(minimum: 10, maximum: 15)
+        displayLink?.add(to: .main, forMode: .common)
+    }
+
+    func stopObservingFindVisibility() {
+        displayLink?.invalidate()
+        displayLink = nil
+    }
+
+    @objc private func checkFindVisibility() {
+        let isVisible = textView?.findInteraction?.isFindNavigatorVisible ?? false
+        if isVisible != isFindVisible {
+            isFindVisible = isVisible
         }
+    }
+
+    deinit {
+        stopObservingFindVisibility()
     }
 }
 
