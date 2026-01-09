@@ -14,9 +14,12 @@ jobs:
       - name: Select Xcode 26
         run: sudo xcode-select -s /Applications/Xcode_26.1.1.app
 
+      - name: Clean Derived Data
+        run: rm -rf ~/Library/Developer/Xcode/DerivedData
+
       - name: Run macOS Tests
         run: |
-          xcodebuild test \
+          xcodebuild clean test \
             -project macOS/SixNotes.xcodeproj \
             -scheme SixNotes \
             -destination 'platform=macOS' \
@@ -33,9 +36,12 @@ jobs:
       - name: Select Xcode 26
         run: sudo xcode-select -s /Applications/Xcode_26.1.1.app
 
+      - name: Clean Derived Data
+        run: rm -rf ~/Library/Developer/Xcode/DerivedData
+
       - name: Run iOS Tests
         run: |
-          xcodebuild test \
+          xcodebuild clean test \
             -project iOS/SixNotes.xcodeproj \
             -scheme SixNotes \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=26.1'
