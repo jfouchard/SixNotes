@@ -182,7 +182,7 @@ class FindableTextEditorCoordinator: NSObject, UITextViewDelegate, ObservableObj
     var textBinding: Binding<String>?
     @Published var isFindVisible = false
 
-    private var displayLink: CADisplayLink?
+    private var timer: Timer?
 
     func textViewDidChange(_ textView: UITextView) {
         textBinding?.wrappedValue = textView.text
@@ -193,17 +193,17 @@ class FindableTextEditorCoordinator: NSObject, UITextViewDelegate, ObservableObj
     }
 
     func startObservingFindVisibility() {
-        displayLink = CADisplayLink(target: self, selector: #selector(checkFindVisibility))
-        displayLink?.preferredFrameRateRange = CAFrameRateRange(minimum: 10, maximum: 15)
-        displayLink?.add(to: .main, forMode: .common)
+        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            self?.checkFindVisibility()
+        }
     }
 
     func stopObservingFindVisibility() {
-        displayLink?.invalidate()
-        displayLink = nil
+        timer?.invalidate()
+        timer = nil
     }
 
-    @objc private func checkFindVisibility() {
+    private func checkFindVisibility() {
         let isVisible = textView?.findInteraction?.isFindNavigatorVisible ?? false
         if isVisible != isFindVisible {
             isFindVisible = isVisible
