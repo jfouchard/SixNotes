@@ -220,10 +220,17 @@ struct NoteTextEditor: NSViewRepresentable {
         textView.isAutomaticDashSubstitutionEnabled = false
         textView.isAutomaticTextReplacementEnabled = false
 
+        // Enable Find Bar (system find and replace)
+        textView.usesFindBar = true
+        textView.isIncrementalSearchingEnabled = true
+
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
         scrollView.drawsBackground = false
         scrollView.borderType = .noBorder
+
+        // Store reference for find operations
+        context.coordinator.textView = textView
 
         // Set initial text
         textView.string = text
@@ -259,6 +266,7 @@ struct NoteTextEditor: NSViewRepresentable {
 
     class Coordinator: NSObject, NSTextViewDelegate {
         var parent: NoteTextEditor
+        weak var textView: NSTextView?
 
         init(_ parent: NoteTextEditor) {
             self.parent = parent

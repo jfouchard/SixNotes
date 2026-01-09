@@ -8,6 +8,7 @@ struct NoteEditorView: View {
     @State private var showToolbar = false
     @State private var dragOffset: CGFloat = 0
     @State private var showShareSheet = false
+    @StateObject private var textEditorCoordinator = FindableTextEditorCoordinator()
 
     private let toolbarHeight: CGFloat = 44
     private let revealThreshold: CGFloat = 50
@@ -29,6 +30,14 @@ struct NoteEditorView: View {
                     HStack {
                         Spacer()
                         Button {
+                            textEditorCoordinator.presentFind()
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                                .font(.title3)
+                                .foregroundStyle(.primary)
+                                .frame(width: 44, height: 44)
+                        }
+                        Button {
                             showShareSheet = true
                         } label: {
                             Image(systemName: "square.and.arrow.up")
@@ -41,12 +50,13 @@ struct NoteEditorView: View {
                     .frame(height: toolbarHeight)
                     .background(Color(uiColor: .secondarySystemBackground))
 
-                    TextEditor(text: notesManager.noteBinding(for: noteIndex))
-                        .font(notesManager.textFont.font)
-                        .focused($isFocused)
-                        .scrollContentBackground(.hidden)
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
+                    FindableTextEditor(
+                        text: notesManager.noteBinding(for: noteIndex),
+                        font: notesManager.textFont.uiFont,
+                        coordinator: textEditorCoordinator
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
                 }
                 .offset(y: revealedAmount - toolbarHeight)
                 .simultaneousGesture(
@@ -78,8 +88,8 @@ struct NoteEditorView: View {
                         }
                 )
 
-                // Done button that appears only when software keyboard is up
-                if keyboardHeight > 0 {
+                // Done button that appears only when software keyboard is up and find panel is not visible
+                if keyboardHeight > 0 && !textEditorCoordinator.isFindVisible {
                     Button {
                         isFocused = false
                     } label: {
@@ -107,6 +117,101 @@ struct NoteEditorView: View {
             ShareSheet(items: [currentNoteContent])
                 .presentationDetents([.medium, .large])
         }
+    }
+}
+
+// MARK: - FindableTextEditor
+
+struct FindableTextEditor: UIViewRepresentable {
+    @Binding var text: String
+    var font: UIFont
+    var coordinator: FindableTextEditorCoordinator
+
+    func makeUIView(context: Context) -> UITextView {
+        let textView = UITextView()
+        textView.delegate = context.coordinator
+        textView.font = font
+        textView.backgroundColor = .clear
+        textView.text = text
+
+        // Enable find interaction (iOS 16+)
+        textView.isFindInteractionEnabled = true
+
+        // Store reference in coordinator for find operations
+        context.coordinator.textView = textView
+        context.coordinator.startObservingFindVisibility()
+
+        // Configure for editing
+        textView.isEditable = true
+        textView.isSelectable = true
+        textView.allowsEditingTextAttributes = false
+        textView.autocapitalizationType = .sentences
+        textView.autocorrectionType = .default
+
+        return textView
+    }
+
+    func updateUIView(_ textView: UITextView, context: Context) {
+        // Update text binding reference for coordinator
+        context.coordinator.textBinding = $text
+
+        if textView.text != text {
+            let selectedRange = textView.selectedRange
+            textView.text = text
+            // Restore selection if possible
+            if selectedRange.location <= text.count {
+                textView.selectedRange = selectedRange
+            }
+        }
+
+        if textView.font != font {
+            textView.font = font
+        }
+
+        // Keep coordinator reference updated
+        context.coordinator.textView = textView
+    }
+
+    func makeCoordinator() -> FindableTextEditorCoordinator {
+        coordinator
+    }
+}
+
+class FindableTextEditorCoordinator: NSObject, UITextViewDelegate, ObservableObject {
+    var textView: UITextView?
+    var textBinding: Binding<String>?
+    @Published var isFindVisible = false
+
+    private var timer: Timer?
+
+    func textViewDidChange(_ textView: UITextView) {
+        textBinding?.wrappedValue = textView.text
+    }
+
+    func presentFind() {
+        textView?.findInteraction?.presentFindNavigator(showingReplace: false)
+    }
+
+    func startObservingFindVisibility() {
+        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            self?.checkFindVisibility()
+        }
+    }
+
+    func stopObservingFindVisibility() {
+        timer?.invalidate()
+        timer = nil
+    }
+
+    private func checkFindVisibility() {
+        let isVisible = textView?.findInteraction?.isFindNavigatorVisible ?? false
+        if isVisible != isFindVisible {
+            isFindVisible = isVisible
+        }
+    }
+
+    deinit {
+        stopObservingFindVisibility()
     }
 }
 
