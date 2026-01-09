@@ -88,8 +88,8 @@ struct NoteEditorView: View {
                         }
                 )
 
-                // Done button that appears only when software keyboard is up
-                if keyboardHeight > 0 {
+                // Done button that appears only when software keyboard is up and find panel is not visible
+                if keyboardHeight > 0 && !textEditorCoordinator.isFindVisible {
                     Button {
                         isFocused = false
                     } label: {
@@ -139,6 +139,7 @@ struct FindableTextEditor: UIViewRepresentable {
 
         // Store reference in coordinator for find operations
         context.coordinator.textView = textView
+        context.coordinator.observeFindInteraction()
 
         // Configure for editing
         textView.isEditable = true
@@ -179,6 +180,9 @@ struct FindableTextEditor: UIViewRepresentable {
 class FindableTextEditorCoordinator: NSObject, UITextViewDelegate, ObservableObject {
     var textView: UITextView?
     var textBinding: Binding<String>?
+    @Published var isFindVisible = false
+
+    private var findObservation: NSKeyValueObservation?
 
     func textViewDidChange(_ textView: UITextView) {
         textBinding?.wrappedValue = textView.text
@@ -186,6 +190,14 @@ class FindableTextEditorCoordinator: NSObject, UITextViewDelegate, ObservableObj
 
     func presentFind() {
         textView?.findInteraction?.presentFindNavigator(showingReplace: false)
+    }
+
+    func observeFindInteraction() {
+        findObservation = textView?.findInteraction?.observe(\.isFindNavigatorVisible, options: [.new]) { [weak self] _, change in
+            DispatchQueue.main.async {
+                self?.isFindVisible = change.newValue ?? false
+            }
+        }
     }
 }
 
