@@ -44,6 +44,9 @@ jobs:
       - name: Clean Derived Data
         run: rm -rf ~/Library/Developer/Xcode/DerivedData
 
+      - name: List Available Simulators
+        run: xcrun simctl list devices available | grep iPhone | head -10
+
       - name: Run iOS Tests
         uses: nick-fields/retry@v3
         with:
@@ -54,4 +57,4 @@ jobs:
             xcodebuild clean test \
               -project iOS/SixNotes.xcodeproj \
               -scheme SixNotes \
-              -destination 'platform=iOS Simulator,name=iPhone 16,OS=26.1'
+              -destination 'platform=iOS Simulator,name=iPhone 17'
