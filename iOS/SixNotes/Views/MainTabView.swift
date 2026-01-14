@@ -24,6 +24,8 @@ struct MainTabView: View {
                 ForEach(0..<6, id: \.self) { index in
                     let noteColor = Self.noteColors[index]
                     Button {
+                        // Dismiss keyboard first, then switch tabs
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                         withAnimation {
                             selectedTab = index
                         }
