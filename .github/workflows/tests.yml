@@ -5,32 +5,33 @@ on:
     branches: [main]
 
 jobs:
-  test-macos:
-    name: macOS Tests
-    runs-on: macos-15
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Select Xcode 26
-        run: sudo xcode-select -s /Applications/Xcode_26.1.1.app
-
-      - name: Clean Derived Data
-        run: rm -rf ~/Library/Developer/Xcode/DerivedData
-
-      - name: Run macOS Tests
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          retry_on: error
-          command: |
-            xcodebuild clean test \
-              -project macOS/SixNotes.xcodeproj \
-              -scheme SixNotes \
-              -destination 'platform=macOS' \
-              CODE_SIGN_IDENTITY=- \
-              CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGNING_ALLOWED=NO
+  # TODO: Re-enable macOS tests once Xcode 26 actool crash is resolved
+  # test-macos:
+  #   name: macOS Tests
+  #   runs-on: macos-15
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - name: Select Xcode 26
+  #       run: sudo xcode-select -s /Applications/Xcode_26.1.1.app
+  #
+  #     - name: Clean Derived Data
+  #       run: rm -rf ~/Library/Developer/Xcode/DerivedData
+  #
+  #     - name: Run macOS Tests
+  #       uses: nick-fields/retry@v3
+  #       with:
+  #         timeout_minutes: 10
+  #         max_attempts: 3
+  #         retry_on: error
+  #         command: |
+  #           xcodebuild clean test \
+  #             -project macOS/SixNotes.xcodeproj \
+  #             -scheme SixNotes \
+  #             -destination 'platform=macOS' \
+  #             CODE_SIGN_IDENTITY=- \
+  #             CODE_SIGNING_REQUIRED=NO \
+  #             CODE_SIGNING_ALLOWED=NO
 
   test-ios:
     name: iOS Tests

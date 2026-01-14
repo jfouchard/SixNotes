@@ -91,6 +91,7 @@ struct NoteEditorView: View {
                 if keyboardHeight > 0 && !textEditorCoordinator.isFindVisible {
                     Button {
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                        NotificationCenter.default.post(name: .dismissKeyboardWithAnimation, object: nil)
                     } label: {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.title)
