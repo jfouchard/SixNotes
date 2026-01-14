@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var notesManager: NotesManager
-    @State private var showSettings = false
     @State private var isWindowFocused = true
 
     private var currentNoteContent: String {
@@ -46,13 +45,6 @@ struct ContentView: View {
         .frame(minWidth: 400, minHeight: 300)
         .background(Color(NSColor.windowBackgroundColor))
         .ignoresSafeArea()
-        .sheet(isPresented: $showSettings) {
-            SettingsView()
-                .environmentObject(notesManager)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .showSettings)) { _ in
-            showSettings = true
-        }
         .onReceive(NotificationCenter.default.publisher(for: .togglePreview)) { _ in
             PreviewWindowController.shared.toggle(notesManager: notesManager)
         }
@@ -288,43 +280,22 @@ struct NoteTextEditor: NSViewRepresentable {
 
 struct SettingsView: View {
     @EnvironmentObject var notesManager: NotesManager
-    @Environment(\.dismiss) var dismiss
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            HStack {
-                Text("Settings")
-                    .font(.title2.bold())
-                Spacer()
-                Button(action: { dismiss() }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(.plain)
-                .keyboardShortcut(.escape, modifiers: [])
-            }
-
-            Divider()
-
-            // Text Font Setting
+        Form {
             FontSettingRow(
                 title: "Editor Font",
                 fontSetting: $notesManager.textFont
             )
 
-            Divider()
-
-            // Code Font Setting
             FontSettingRow(
                 title: "Code Font",
                 fontSetting: $notesManager.codeFont
             )
-
-            Spacer()
         }
-        .padding(24)
-        .frame(width: 400, height: 280)
+        .formStyle(.grouped)
+        .frame(width: 450)
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
 

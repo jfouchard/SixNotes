@@ -17,12 +17,6 @@ struct SixNotesApp: App {
         .defaultSize(width: 600, height: 500)
         .commands {
             CommandGroup(replacing: .newItem) { }
-            CommandGroup(replacing: .appSettings) {
-                Button("Settings...") {
-                    NotificationCenter.default.post(name: .showSettings, object: nil)
-                }
-                .keyboardShortcut(",", modifiers: .command)
-            }
             CommandGroup(after: .toolbar) {
                 Button("Show Markdown Preview") {
                     NotificationCenter.default.post(name: .togglePreview, object: nil)
@@ -39,6 +33,11 @@ struct SixNotesApp: App {
             }
             // Enable Edit > Find menu with Cmd+F
             TextEditingCommands()
+        }
+
+        Settings {
+            SettingsView()
+                .environmentObject(notesManager)
         }
     }
 
@@ -74,6 +73,5 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 extension Notification.Name {
-    static let showSettings = Notification.Name("showSettings")
     static let togglePreview = Notification.Name("togglePreview")
 }
