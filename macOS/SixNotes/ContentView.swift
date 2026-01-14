@@ -195,7 +195,6 @@ struct NoteEditorView: View {
                 notesManager.saveCursorPosition(position)
             }
         )
-        .padding(16)
         .id(notesManager.selectedNoteIndex) // Force recreation when switching notes
     }
 }
@@ -219,6 +218,9 @@ struct NoteTextEditor: NSViewRepresentable {
         textView.isAutomaticQuoteSubstitutionEnabled = false
         textView.isAutomaticDashSubstitutionEnabled = false
         textView.isAutomaticTextReplacementEnabled = false
+
+        // Add text insets for padding while keeping scrollbar at window edge
+        textView.textContainerInset = NSSize(width: 16, height: 16)
 
         // Enable Find Bar (system find and replace)
         textView.usesFindBar = true
