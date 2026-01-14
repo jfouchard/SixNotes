@@ -3,7 +3,6 @@ import SwiftUI
 struct NoteEditorView: View {
     let noteIndex: Int
     @EnvironmentObject var notesManager: NotesManager
-    @FocusState private var isFocused: Bool
     @State private var keyboardHeight: CGFloat = 0
     @State private var showToolbar = false
     @State private var dragOffset: CGFloat = 0
@@ -91,7 +90,8 @@ struct NoteEditorView: View {
                 // Done button that appears only when software keyboard is up and find panel is not visible
                 if keyboardHeight > 0 && !textEditorCoordinator.isFindVisible {
                     Button {
-                        isFocused = false
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                        NotificationCenter.default.post(name: .dismissKeyboardWithAnimation, object: nil)
                     } label: {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.title)
