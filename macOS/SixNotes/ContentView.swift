@@ -11,7 +11,7 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Title bar area
+            // Title bar area - aligned with traffic lights
             HStack {
                 Spacer()
 
@@ -35,7 +35,7 @@ struct ContentView: View {
                 ShareButton(content: currentNoteContent)
                     .padding(.trailing, 8)
             }
-            .frame(height: 28)
+            .padding(.top, 5)
             .opacity(isWindowFocused ? 1.0 : 0.4)
             .animation(.easeInOut(duration: 0.2), value: isWindowFocused)
 
