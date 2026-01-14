@@ -58,6 +58,17 @@ struct SixNotesApp: App {
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        return false
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            // Reopen the main window when dock icon is clicked and no windows are visible
+            for window in sender.windows {
+                window.makeKeyAndOrderFront(self)
+                return true
+            }
+        }
         return true
     }
 }
