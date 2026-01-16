@@ -279,20 +279,25 @@ struct NoteTextEditor: NSViewRepresentable {
 }
 
 struct SettingsView: View {
+    @State private var selectedTab = 0
+
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             GeneralSettingsTab()
                 .tabItem {
                     Label("General", systemImage: "gearshape")
                 }
+                .tag(0)
 
             SyncSettingsTab()
                 .tabItem {
                     Label("iCloud", systemImage: "icloud")
                 }
+                .tag(1)
         }
         .frame(width: 450)
         .fixedSize(horizontal: false, vertical: true)
+        .animation(.easeInOut(duration: 0.2), value: selectedTab)
     }
 }
 
