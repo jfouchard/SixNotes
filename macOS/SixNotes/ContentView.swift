@@ -278,26 +278,76 @@ struct NoteTextEditor: NSViewRepresentable {
     }
 }
 
+private struct TabSizeKey: PreferenceKey {
+    static var defaultValue: [Int: CGSize] = [:]
+    static func reduce(value: inout [Int: CGSize], nextValue: () -> [Int: CGSize]) {
+        value.merge(nextValue()) { _, new in new }
+    }
+}
+
 struct SettingsView: View {
     @State private var selectedTab = 0
+    @State private var tabSizes: [Int: CGSize] = [:]
 
     var body: some View {
         TabView(selection: $selectedTab) {
             GeneralSettingsTab()
+                .background(
+                    GeometryReader { geo in
+                        Color.clear.preference(key: TabSizeKey.self, value: [0: geo.size])
+                    }
+                )
                 .tabItem {
                     Label("General", systemImage: "gearshape")
                 }
                 .tag(0)
 
             SyncSettingsTab()
+                .background(
+                    GeometryReader { geo in
+                        Color.clear.preference(key: TabSizeKey.self, value: [1: geo.size])
+                    }
+                )
                 .tabItem {
                     Label("iCloud", systemImage: "icloud")
                 }
                 .tag(1)
         }
         .frame(width: 450)
-        .fixedSize(horizontal: false, vertical: true)
-        .animation(.easeInOut(duration: 0.15), value: selectedTab)
+        .onPreferenceChange(TabSizeKey.self) { sizes in
+            tabSizes.merge(sizes) { _, new in new }
+        }
+        .onChange(of: selectedTab) { newTab in
+            animateWindowSize(for: newTab)
+        }
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                animateWindowSize(for: selectedTab)
+            }
+        }
+    }
+
+    private func animateWindowSize(for tab: Int) {
+        guard let size = tabSizes[tab],
+              let window = NSApp.keyWindow else { return }
+
+        let toolbarHeight: CGFloat = 78
+        let newHeight = size.height + toolbarHeight
+        let currentFrame = window.frame
+
+        // Keep top-left corner fixed (macOS y-origin is at bottom)
+        let newFrame = NSRect(
+            x: currentFrame.origin.x,
+            y: currentFrame.origin.y - (newHeight - currentFrame.height),
+            width: currentFrame.width,
+            height: newHeight
+        )
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.15
+            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            window.animator().setFrame(newFrame, display: true)
+        }
     }
 }
 
@@ -373,18 +423,9 @@ struct SyncSettingsTab: View {
                         )
                     }
 
-                    Button {
+                    Button("Sync Now") {
                         Task {
                             await notesManager.performSync()
-                        }
-                    } label: {
-                        HStack {
-                            Text("Sync Now")
-                            Spacer()
-                            if notesManager.isSyncing {
-                                ProgressView()
-                                    .scaleEffect(0.5)
-                            }
                         }
                     }
                     .disabled(notesManager.isSyncing)
