@@ -7,6 +7,7 @@ struct NoteEditorView: View {
     @State private var showToolbar = false
     @State private var dragOffset: CGFloat = 0
     @State private var showShareSheet = false
+    @State private var showSettings = false
     @StateObject private var textEditorCoordinator = FindableTextEditorCoordinator()
 
     private let toolbarHeight: CGFloat = 44
@@ -27,6 +28,14 @@ struct NoteEditorView: View {
                 VStack(spacing: 0) {
                     // Toolbar positioned above the view, revealed by note sliding down
                     HStack {
+                        Button {
+                            showSettings = true
+                        } label: {
+                            Image(systemName: "gearshape")
+                                .font(.title3)
+                                .foregroundStyle(.primary)
+                                .frame(width: 44, height: 44)
+                        }
                         Spacer()
                         Button {
                             textEditorCoordinator.presentFind()
@@ -116,6 +125,9 @@ struct NoteEditorView: View {
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(items: [currentNoteContent])
                 .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
         }
     }
 }

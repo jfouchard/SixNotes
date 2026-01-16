@@ -10,6 +10,7 @@ struct SixNotesApp: App {
             ContentView()
                 .environmentObject(notesManager)
                 .onAppear {
+                    appDelegate.notesManager = notesManager
                     configureWindow()
                 }
         }
@@ -56,6 +57,12 @@ struct SixNotesApp: App {
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+    var notesManager: NotesManager?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        registerForPushNotifications()
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return false
     }
@@ -69,6 +76,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         return true
+    }
+
+    private func registerForPushNotifications() {
+        NSApplication.shared.registerForRemoteNotifications()
+    }
+
+    func application(_ application: NSApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        // CloudKit handles its own subscription-based notifications
+    }
+
+    func application(_ application: NSApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        print("Failed to register for remote notifications: \(error)")
+    }
+
+    func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String: Any]) {
+        Task { @MainActor in
+            guard let notesManager = notesManager else { return }
+            await notesManager.handleRemoteNotification(userInfo: userInfo)
+        }
     }
 }
 
