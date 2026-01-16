@@ -280,7 +280,7 @@ struct NoteTextEditor: NSViewRepresentable {
 
 struct SettingsView: View {
     @State private var selectedTab = 0
-    @State private var contentHeight: CGFloat = 200
+    @State private var contentHeight: CGFloat = 280
 
     var body: some View {
         TabView(selection: $selectedTab) {
