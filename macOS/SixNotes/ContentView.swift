@@ -291,7 +291,8 @@ struct SettingsView: View {
                     Label("iCloud", systemImage: "icloud")
                 }
         }
-        .frame(width: 450, height: 250)
+        .frame(width: 450)
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
 
