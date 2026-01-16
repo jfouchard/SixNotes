@@ -1,6 +1,7 @@
 import XCTest
 @testable import SixNotes
 
+@MainActor
 final class NotesManagerTests: XCTestCase {
 
     var sut: NotesManager!
@@ -10,6 +11,7 @@ final class NotesManagerTests: XCTestCase {
     private let selectedNoteKey = "SixNotes.selectedNote"
     private let textFontKey = "SixNotes.textFont"
     private let codeFontKey = "SixNotes.codeFont"
+    private let syncEnabledKey = "SixNotes.syncEnabled"
 
     override func setUp() {
         super.setUp()
@@ -29,6 +31,7 @@ final class NotesManagerTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: selectedNoteKey)
         UserDefaults.standard.removeObject(forKey: textFontKey)
         UserDefaults.standard.removeObject(forKey: codeFontKey)
+        UserDefaults.standard.removeObject(forKey: syncEnabledKey)
     }
 
     // MARK: - Initialization Tests
@@ -274,5 +277,18 @@ final class NotesManagerTests: XCTestCase {
         for i in 0..<6 {
             XCTAssertEqual(newManager.notes[i].content, "Persisted Note \(i)")
         }
+    }
+
+    // MARK: - Sync State Tests
+
+    func testInitializationDefaultSyncDisabled() {
+        XCTAssertFalse(sut.isSyncEnabled)
+    }
+
+    func testSyncEnabledPersistence() {
+        sut.isSyncEnabled = true
+
+        let newManager = NotesManager()
+        XCTAssertTrue(newManager.isSyncEnabled)
     }
 }
