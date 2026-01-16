@@ -279,6 +279,42 @@ struct NoteTextEditor: NSViewRepresentable {
 }
 
 struct SettingsView: View {
+    var body: some View {
+        TabView {
+            GeneralSettingsTab()
+                .tabItem {
+                    Label("General", systemImage: "gearshape")
+                }
+
+            SyncSettingsTab()
+                .tabItem {
+                    Label("iCloud", systemImage: "icloud")
+                }
+        }
+        .frame(width: 450, height: 200)
+    }
+}
+
+struct GeneralSettingsTab: View {
+    @EnvironmentObject var notesManager: NotesManager
+
+    var body: some View {
+        Form {
+            FontSettingRow(
+                title: "Editor Font",
+                fontSetting: $notesManager.textFont
+            )
+
+            FontSettingRow(
+                title: "Code Font",
+                fontSetting: $notesManager.codeFont
+            )
+        }
+        .formStyle(.grouped)
+    }
+}
+
+struct SyncSettingsTab: View {
     @EnvironmentObject var notesManager: NotesManager
 
     private var accountStatusText: String {
@@ -346,23 +382,9 @@ struct SettingsView: View {
                     }
                     .disabled(notesManager.isSyncing)
                 }
-            } header: {
-                Text("iCloud")
             }
-
-            FontSettingRow(
-                title: "Editor Font",
-                fontSetting: $notesManager.textFont
-            )
-
-            FontSettingRow(
-                title: "Code Font",
-                fontSetting: $notesManager.codeFont
-            )
         }
         .formStyle(.grouped)
-        .frame(width: 450)
-        .fixedSize(horizontal: false, vertical: true)
     }
 }
 
