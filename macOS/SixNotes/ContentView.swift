@@ -280,43 +280,24 @@ struct NoteTextEditor: NSViewRepresentable {
 
 struct SettingsView: View {
     @State private var selectedTab = 0
-    @State private var contentHeight: CGFloat = 280
 
     var body: some View {
         TabView(selection: $selectedTab) {
             GeneralSettingsTab()
-                .background(GeometryReader { geo in
-                    Color.clear.preference(key: TabHeightPreferenceKey.self, value: geo.size.height)
-                })
+                .fixedSize(horizontal: false, vertical: true)
                 .tabItem {
                     Label("General", systemImage: "gearshape")
                 }
                 .tag(0)
 
             SyncSettingsTab()
-                .background(GeometryReader { geo in
-                    Color.clear.preference(key: TabHeightPreferenceKey.self, value: geo.size.height)
-                })
+                .fixedSize(horizontal: false, vertical: true)
                 .tabItem {
                     Label("iCloud", systemImage: "icloud")
                 }
                 .tag(1)
         }
-        .frame(width: 450, height: contentHeight)
-        .onPreferenceChange(TabHeightPreferenceKey.self) { height in
-            if height > 0 {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    contentHeight = height
-                }
-            }
-        }
-    }
-}
-
-private struct TabHeightPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
+        .frame(width: 450)
     }
 }
 
@@ -336,7 +317,6 @@ struct GeneralSettingsTab: View {
             )
         }
         .formStyle(.grouped)
-        .padding(.bottom, 8)
     }
 }
 
