@@ -336,6 +336,7 @@ struct GeneralSettingsTab: View {
             )
         }
         .formStyle(.grouped)
+        .padding(.bottom, 8)
     }
 }
 
