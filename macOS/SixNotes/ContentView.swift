@@ -280,45 +280,24 @@ struct NoteTextEditor: NSViewRepresentable {
 
 struct SettingsView: View {
     @State private var selectedTab = 0
-    @State private var contentSize: CGSize = CGSize(width: 450, height: 200)
 
     var body: some View {
         TabView(selection: $selectedTab) {
             GeneralSettingsTab()
-                .background(
-                    GeometryReader { geo in
-                        Color.clear.preference(key: SizePreferenceKey.self, value: geo.size)
-                    }
-                )
                 .tabItem {
                     Label("General", systemImage: "gearshape")
                 }
                 .tag(0)
 
             SyncSettingsTab()
-                .background(
-                    GeometryReader { geo in
-                        Color.clear.preference(key: SizePreferenceKey.self, value: geo.size)
-                    }
-                )
                 .tabItem {
                     Label("iCloud", systemImage: "icloud")
                 }
                 .tag(1)
         }
-        .frame(width: 450, height: contentSize.height)
-        .onPreferenceChange(SizePreferenceKey.self) { size in
-            withAnimation(.easeInOut(duration: 0.15)) {
-                contentSize = size
-            }
-        }
-    }
-}
-
-private struct SizePreferenceKey: PreferenceKey {
-    static var defaultValue: CGSize = .zero
-    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
-        value = nextValue()
+        .frame(width: 450)
+        .fixedSize(horizontal: false, vertical: true)
+        .animation(.easeInOut(duration: 0.15), value: selectedTab)
     }
 }
 
