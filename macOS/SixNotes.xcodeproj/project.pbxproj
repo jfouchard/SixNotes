@@ -15,9 +15,11 @@
 		A1000003220000010000000A /* NotesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000003110000010000000A /* NotesManager.swift */; };
 		A1000004220000010000000A /* MarkdownPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000004110000010000000A /* MarkdownPreviewView.swift */; };
 		A1000005220000010000000A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000005110000010000000A /* Assets.xcassets */; };
+		A1000009220000010000000A /* MarkdownConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000009110000010000000A /* MarkdownConverter.swift */; };
 		B1000001220000010000000A /* NoteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000001110000010000000A /* NoteTests.swift */; };
 		B1000002220000010000000A /* FontSettingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000002110000010000000A /* FontSettingTests.swift */; };
 		B1000003220000010000000A /* NotesManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000003110000010000000A /* NotesManagerTests.swift */; };
+		B1000004220000010000000A /* MarkdownConverterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000004110000010000000A /* MarkdownConverterTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,10 +42,12 @@
 		A1000005110000010000000A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A1000006110000010000000A /* SixNotes.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SixNotes.entitlements; sourceTree = "<group>"; };
 		A1000007110000010000000A /* CloudKitSyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitSyncEngine.swift; sourceTree = "<group>"; };
+		A1000009110000010000000A /* MarkdownConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownConverter.swift; sourceTree = "<group>"; };
 		B1000000000000010000000A /* SixNotesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SixNotesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1000001110000010000000A /* NoteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteTests.swift; sourceTree = "<group>"; };
 		B1000002110000010000000A /* FontSettingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontSettingTests.swift; sourceTree = "<group>"; };
 		B1000003110000010000000A /* NotesManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesManagerTests.swift; sourceTree = "<group>"; };
+		B1000004110000010000000A /* MarkdownConverterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownConverterTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +85,7 @@
 				A1000002110000010000000A /* ContentView.swift */,
 				A1000003110000010000000A /* NotesManager.swift */,
 				A1000004110000010000000A /* MarkdownPreviewView.swift */,
+				A1000009110000010000000A /* MarkdownConverter.swift */,
 				A1000008110000010000000A /* Sync */,
 				A1000005110000010000000A /* Assets.xcassets */,
 				A1000006110000010000000A /* SixNotes.entitlements */,
@@ -111,6 +116,7 @@
 				B1000001110000010000000A /* NoteTests.swift */,
 				B1000002110000010000000A /* FontSettingTests.swift */,
 				B1000003110000010000000A /* NotesManagerTests.swift */,
+				B1000004110000010000000A /* MarkdownConverterTests.swift */,
 			);
 			path = SixNotesTests;
 			sourceTree = "<group>";
@@ -220,6 +226,7 @@
 				A1000002220000010000000A /* ContentView.swift in Sources */,
 				A1000003220000010000000A /* NotesManager.swift in Sources */,
 				A1000004220000010000000A /* MarkdownPreviewView.swift in Sources */,
+				A1000009220000010000000A /* MarkdownConverter.swift in Sources */,
 				A1000007220000010000000A /* CloudKitSyncEngine.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -231,6 +238,7 @@
 				B1000001220000010000000A /* NoteTests.swift in Sources */,
 				B1000002220000010000000A /* FontSettingTests.swift in Sources */,
 				B1000003220000010000000A /* NotesManagerTests.swift in Sources */,
+				B1000004220000010000000A /* MarkdownConverterTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

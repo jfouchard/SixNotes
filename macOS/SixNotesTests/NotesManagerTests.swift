@@ -12,6 +12,7 @@ final class NotesManagerTests: XCTestCase {
     private let textFontKey = "SixNotes.textFont"
     private let codeFontKey = "SixNotes.codeFont"
     private let syncEnabledKey = "SixNotes.syncEnabled"
+    private let warnOnPlainTextKey = "SixNotes.warnOnPlainTextConversion"
 
     override func setUp() {
         super.setUp()
@@ -32,6 +33,7 @@ final class NotesManagerTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: textFontKey)
         UserDefaults.standard.removeObject(forKey: codeFontKey)
         UserDefaults.standard.removeObject(forKey: syncEnabledKey)
+        UserDefaults.standard.removeObject(forKey: warnOnPlainTextKey)
     }
 
     // MARK: - Initialization Tests
@@ -290,5 +292,87 @@ final class NotesManagerTests: XCTestCase {
 
         let newManager = NotesManager()
         XCTAssertTrue(newManager.isSyncEnabled)
+    }
+
+    // MARK: - Plain Text Mode Tests
+
+    func testInitializationDefaultWarnOnPlainTextConversionEnabled() {
+        XCTAssertTrue(sut.warnOnPlainTextConversion)
+    }
+
+    func testWarnOnPlainTextConversionPersistence() {
+        sut.warnOnPlainTextConversion = false
+
+        let newManager = NotesManager()
+        XCTAssertFalse(newManager.warnOnPlainTextConversion)
+    }
+
+    func testCurrentNoteIsPlainTextDefault() {
+        XCTAssertFalse(sut.currentNoteIsPlainText)
+    }
+
+    func testTogglePlainText() {
+        sut.selectNote(0)
+        XCTAssertFalse(sut.currentNoteIsPlainText)
+
+        sut.togglePlainText()
+        XCTAssertTrue(sut.currentNoteIsPlainText)
+
+        sut.togglePlainText()
+        XCTAssertFalse(sut.currentNoteIsPlainText)
+    }
+
+    func testSetPlainTextTrue() {
+        sut.selectNote(0)
+        sut.setPlainText(true)
+        XCTAssertTrue(sut.notes[0].isPlainText)
+    }
+
+    func testSetPlainTextFalse() {
+        sut.selectNote(0)
+        sut.setPlainText(true)
+        sut.setPlainText(false)
+        XCTAssertFalse(sut.notes[0].isPlainText)
+    }
+
+    func testPlainTextModeUpdatesLastModified() {
+        sut.selectNote(0)
+        let originalDate = sut.notes[0].lastModified
+
+        Thread.sleep(forTimeInterval: 0.01)
+
+        sut.togglePlainText()
+        XCTAssertGreaterThan(sut.notes[0].lastModified, originalDate)
+    }
+
+    func testPlainTextModeSetsSyncStateToPendingUpload() {
+        sut.selectNote(0)
+        sut.notes[0].syncState = .synced
+
+        sut.togglePlainText()
+        XCTAssertEqual(sut.notes[0].syncState, .pendingUpload)
+    }
+
+    func testPlainTextModePersistence() {
+        sut.selectNote(0)
+        sut.setPlainText(true)
+
+        let newManager = NotesManager()
+        XCTAssertTrue(newManager.notes[0].isPlainText)
+    }
+
+    func testPlainTextModeFollowsSelection() {
+        sut.notes[0].isPlainText = true
+        sut.notes[1].isPlainText = false
+        sut.notes[2].isPlainText = true
+
+        sut.selectNote(0)
+        XCTAssertTrue(sut.currentNoteIsPlainText)
+
+        sut.selectNote(1)
+        XCTAssertFalse(sut.currentNoteIsPlainText)
+
+        sut.selectNote(2)
+        XCTAssertTrue(sut.currentNoteIsPlainText)
     }
 }

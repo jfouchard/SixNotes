@@ -11,6 +11,7 @@ final class NoteTests: XCTestCase {
         XCTAssertEqual(note.id, 0)
         XCTAssertEqual(note.content, "")
         XCTAssertEqual(note.cursorPosition, 0)
+        XCTAssertFalse(note.isPlainText)
         XCTAssertNotNil(note.lastModified)
         XCTAssertEqual(note.cloudKitRecordName, "note_0")
         XCTAssertNil(note.cloudKitChangeTag)
@@ -36,10 +37,18 @@ final class NoteTests: XCTestCase {
         XCTAssertEqual(note.cursorPosition, 42)
     }
 
+    func testNoteInitializationWithPlainText() {
+        let note = Note(id: 1, content: "Plain text note", cursorPosition: 0, isPlainText: true)
+
+        XCTAssertEqual(note.id, 1)
+        XCTAssertEqual(note.content, "Plain text note")
+        XCTAssertTrue(note.isPlainText)
+    }
+
     // MARK: - Codable Tests
 
     func testNoteEncodingAndDecoding() throws {
-        var originalNote = Note(id: 2, content: "Test note content", cursorPosition: 10)
+        var originalNote = Note(id: 2, content: "Test note content", cursorPosition: 10, isPlainText: true)
         originalNote.syncState = .synced
         originalNote.cloudKitChangeTag = "test-tag"
 
@@ -52,6 +61,7 @@ final class NoteTests: XCTestCase {
         XCTAssertEqual(decodedNote.id, originalNote.id)
         XCTAssertEqual(decodedNote.content, originalNote.content)
         XCTAssertEqual(decodedNote.cursorPosition, originalNote.cursorPosition)
+        XCTAssertEqual(decodedNote.isPlainText, originalNote.isPlainText)
         XCTAssertEqual(decodedNote.syncState, originalNote.syncState)
         XCTAssertEqual(decodedNote.cloudKitChangeTag, originalNote.cloudKitChangeTag)
     }
@@ -112,6 +122,7 @@ final class NoteTests: XCTestCase {
 
         XCTAssertEqual(note.id, 2)
         XCTAssertEqual(note.content, "Legacy note")
+        XCTAssertFalse(note.isPlainText) // Should default to false for migration
         XCTAssertEqual(note.cloudKitRecordName, "note_2")
         XCTAssertEqual(note.syncState, .neverSynced)
         XCTAssertNil(note.cloudKitChangeTag)
@@ -177,6 +188,17 @@ final class NoteTests: XCTestCase {
         note.lastModified = newDate
 
         XCTAssertEqual(note.lastModified, newDate)
+    }
+
+    func testNoteIsPlainTextMutation() {
+        var note = Note(id: 0)
+        XCTAssertFalse(note.isPlainText)
+
+        note.isPlainText = true
+        XCTAssertTrue(note.isPlainText)
+
+        note.isPlainText = false
+        XCTAssertFalse(note.isPlainText)
     }
 
     // MARK: - Sync State Tests

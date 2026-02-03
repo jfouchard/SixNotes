@@ -23,6 +23,13 @@ struct SixNotesApp: App {
                     NotificationCenter.default.post(name: .togglePreview, object: nil)
                 }
                 .keyboardShortcut("p", modifiers: .command)
+
+                Divider()
+
+                Button(notesManager.currentNoteIsPlainText ? "Show Rich Text" : "Show Plain Text") {
+                    notesManager.setPlainText(!notesManager.currentNoteIsPlainText)
+                }
+                .keyboardShortcut("t", modifiers: [.command, .shift])
             }
             CommandMenu("Notes") {
                 ForEach(0..<6, id: \.self) { index in
@@ -48,23 +55,56 @@ struct SixNotesApp: App {
                 // Remove minimize and zoom buttons (yellow and green)
                 window.standardWindowButton(.miniaturizeButton)?.isHidden = true
                 window.standardWindowButton(.zoomButton)?.isHidden = true
-
-                // Enable window position/size restoration
-                window.setFrameAutosaveName("SixNotesMainWindow")
             }
         }
     }
 }
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var notesManager: NotesManager?
+    private let windowFrameKey = "SixNotes.mainWindowFrame"
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         registerForPushNotifications()
+
+        // Disable window tabbing system-wide for this app
+        NSWindow.allowsAutomaticWindowTabbing = false
+
+        // Configure main window
+        DispatchQueue.main.async {
+            if let window = NSApplication.shared.windows.first {
+                window.delegate = self
+                window.tabbingMode = .disallowed
+                // Restore saved frame if available
+                if let frameString = UserDefaults.standard.string(forKey: self.windowFrameKey) {
+                    window.setFrame(NSRectFromString(frameString), display: true)
+                }
+            }
+        }
+    }
+
+    func windowDidResize(_ notification: Notification) {
+        saveWindowFrame()
+    }
+
+    func windowDidMove(_ notification: Notification) {
+        saveWindowFrame()
+    }
+
+    private func saveWindowFrame() {
+        if let window = NSApplication.shared.windows.first {
+            let frameString = NSStringFromRect(window.frame)
+            UserDefaults.standard.set(frameString, forKey: windowFrameKey)
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return false
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        // Flush any pending text editor saves before quitting
+        NoteTextEditor.Coordinator.flushAll()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
