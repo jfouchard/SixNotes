@@ -8,6 +8,10 @@ struct ContentView: View {
         notesManager.notes[notesManager.selectedNoteIndex].content
     }
 
+    private var currentNoteIsPlainText: Bool {
+        notesManager.notes[notesManager.selectedNoteIndex].isPlainText
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Title bar area - aligned with traffic lights
@@ -117,6 +121,7 @@ struct PreviewWindowContent: View {
     }
 }
 
+
 struct ShareButton: View {
     let content: String
 
@@ -181,35 +186,83 @@ struct NoteEditorView: View {
     var body: some View {
         NoteTextEditor(
             text: notesManager.currentNote,
-            font: notesManager.textFont.nsFont,
+            isPlainText: notesManager.currentNoteIsPlainText,
+            textFont: notesManager.textFont.nsFont,
+            codeFont: notesManager.codeFont.nsFont,
             cursorPosition: notesManager.getCursorPosition(),
             onCursorChange: { position in
                 notesManager.saveCursorPosition(position)
             }
         )
-        .id(notesManager.selectedNoteIndex) // Force recreation when switching notes
+        .id("\(notesManager.selectedNoteIndex)-\(notesManager.currentNoteIsPlainText)") // Force recreation when switching notes or plain text mode
+    }
+}
+
+// Custom NSTextView that intercepts formatting shortcuts
+class FormattingTextView: NSTextView {
+    weak var formattingDelegate: NoteTextEditor.Coordinator?
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        // Handle ⌘B for bold
+        if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "b" {
+            if let delegate = formattingDelegate, !delegate.isPlainText {
+                delegate.toggleBold(nil)
+                return true
+            }
+        }
+
+        // Handle ⌘I for italic
+        if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "i" {
+            if let delegate = formattingDelegate, !delegate.isPlainText {
+                delegate.toggleItalic(nil)
+                return true
+            }
+        }
+
+        return super.performKeyEquivalent(with: event)
     }
 }
 
 struct NoteTextEditor: NSViewRepresentable {
     @Binding var text: String
-    var font: NSFont
+    var isPlainText: Bool
+    var textFont: NSFont
+    var codeFont: NSFont
     var cursorPosition: Int
     var onCursorChange: (Int) -> Void
 
-    func makeNSView(context: Context) -> NSScrollView {
-        let scrollView = NSTextView.scrollableTextView()
-        let textView = scrollView.documentView as! NSTextView
+    private let converter = MarkdownConverter()
 
+    func makeNSView(context: Context) -> NSScrollView {
+        // Create a custom text view with formatting support
+        let textView = FormattingTextView()
+        textView.formattingDelegate = context.coordinator
+
+        // Create scroll view manually
+        let scrollView = NSScrollView()
+        scrollView.documentView = textView
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = false
+        scrollView.drawsBackground = false
+        scrollView.borderType = .noBorder
+
+        // Configure text view
         textView.delegate = context.coordinator
-        textView.font = font
         textView.backgroundColor = .clear
         textView.drawsBackground = false
-        textView.isRichText = false
         textView.allowsUndo = true
         textView.isAutomaticQuoteSubstitutionEnabled = false
         textView.isAutomaticDashSubstitutionEnabled = false
         textView.isAutomaticTextReplacementEnabled = false
+
+        // Configure text container for proper layout
+        textView.minSize = NSSize(width: 0, height: 0)
+        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        textView.isVerticallyResizable = true
+        textView.isHorizontallyResizable = false
+        textView.autoresizingMask = [.width]
+        textView.textContainer?.containerSize = NSSize(width: scrollView.contentSize.width, height: CGFloat.greatestFiniteMagnitude)
+        textView.textContainer?.widthTracksTextView = true
 
         // Add text insets for padding while keeping scrollbar at window edge
         textView.textContainerInset = NSSize(width: 16, height: 16)
@@ -218,16 +271,25 @@ struct NoteTextEditor: NSViewRepresentable {
         textView.usesFindBar = true
         textView.isIncrementalSearchingEnabled = true
 
-        scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = false
-        scrollView.drawsBackground = false
-        scrollView.borderType = .noBorder
-
-        // Store reference for find operations
+        // Store reference and configure mode
         context.coordinator.textView = textView
+        context.coordinator.converter = converter
+        context.coordinator.isPlainText = isPlainText
+        context.coordinator.textFont = textFont
+        context.coordinator.codeFont = codeFont
 
-        // Set initial text
-        textView.string = text
+        // Configure for plain text or rich text mode
+        if isPlainText {
+            textView.isRichText = false
+            textView.font = codeFont
+            textView.string = text
+        } else {
+            textView.isRichText = true
+            textView.font = textFont
+            // Convert markdown to attributed string for rich text editing
+            let attributedContent = converter.attributedString(from: text, textFont: textFont, codeFont: codeFont)
+            textView.textStorage?.setAttributedString(attributedContent)
+        }
 
         // Restore cursor position and focus after a brief delay to ensure view is ready
         DispatchQueue.main.async {
@@ -243,15 +305,26 @@ struct NoteTextEditor: NSViewRepresentable {
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         let textView = scrollView.documentView as! NSTextView
 
-        if textView.string != text {
-            let selectedRange = textView.selectedRange()
-            textView.string = text
-            textView.setSelectedRange(selectedRange)
-        }
+        // Update coordinator state
+        context.coordinator.isPlainText = isPlainText
+        context.coordinator.textFont = textFont
+        context.coordinator.codeFont = codeFont
 
-        if textView.font != font {
-            textView.font = font
+        // Skip updates while the user is actively editing
+        guard !context.coordinator.isUserEditing else { return }
+
+        if isPlainText {
+            // Plain text mode - just sync the string
+            if textView.string != text {
+                let selectedRange = textView.selectedRange()
+                textView.string = text
+                let newPosition = min(selectedRange.location, textView.string.count)
+                textView.setSelectedRange(NSRange(location: newPosition, length: 0))
+            }
+            textView.font = codeFont
         }
+        // In rich text mode, we don't update from external changes during editing
+        // The content is converted to markdown on save via textDidChange
     }
 
     func makeCoordinator() -> Coordinator {
@@ -261,19 +334,175 @@ struct NoteTextEditor: NSViewRepresentable {
     class Coordinator: NSObject, NSTextViewDelegate {
         var parent: NoteTextEditor
         weak var textView: NSTextView?
+        var converter: MarkdownConverter?
+        var isPlainText: Bool = true
+        var textFont: NSFont = .systemFont(ofSize: 14)
+        var codeFont: NSFont = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        var isUserEditing = false
+
+        // Debounce work item for rich text conversion
+        private var conversionWorkItem: DispatchWorkItem?
+
+        // Static registry for all active coordinators (for flush on quit)
+        private static var activeCoordinators = NSHashTable<Coordinator>.weakObjects()
 
         init(_ parent: NoteTextEditor) {
             self.parent = parent
+            super.init()
+            Coordinator.activeCoordinators.add(self)
+
+            // Listen for app termination to flush pending saves
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(flushPendingSave),
+                name: NSApplication.willTerminateNotification,
+                object: nil
+            )
+        }
+
+        deinit {
+            NotificationCenter.default.removeObserver(self)
+        }
+
+        /// Immediately flush any pending text changes to storage
+        @objc func flushPendingSave() {
+            conversionWorkItem?.cancel()
+            conversionWorkItem = nil
+
+            guard !isPlainText,
+                  let textView = textView,
+                  let converter = converter else { return }
+
+            let markdown = converter.markdown(from: textView.attributedString())
+            parent.text = markdown
+            isUserEditing = false
+        }
+
+        /// Flush all active coordinators (called from AppDelegate)
+        static func flushAll() {
+            for coordinator in activeCoordinators.allObjects {
+                coordinator.flushPendingSave()
+            }
+        }
+
+        // MARK: - Formatting Actions
+
+        @objc func toggleBold(_ sender: Any?) {
+            guard !isPlainText,
+                  let textView = textView,
+                  let converter = converter else { return }
+
+            let range = textView.selectedRange()
+
+            if range.length > 0 {
+                // Selection exists - apply formatting to selected text
+                guard let textStorage = textView.textStorage else { return }
+
+                let isBold = converter.isBold(in: textStorage, range: range)
+
+                if isBold {
+                    converter.removeBold(from: textStorage, range: range)
+                } else {
+                    converter.applyBold(to: textStorage, range: range)
+                }
+
+                // Trigger text change handling
+                textView.didChangeText()
+            } else {
+                // No selection - toggle typing attributes for future typing
+                var typingAttrs = textView.typingAttributes
+                let currentFont = typingAttrs[.font] as? NSFont ?? textFont
+
+                let traits = NSFontManager.shared.traits(of: currentFont)
+                let isBold = traits.contains(.boldFontMask)
+
+                let newFont: NSFont
+                if isBold {
+                    newFont = NSFontManager.shared.convert(currentFont, toNotHaveTrait: .boldFontMask)
+                } else {
+                    newFont = NSFontManager.shared.convert(currentFont, toHaveTrait: .boldFontMask)
+                }
+
+                typingAttrs[.font] = newFont
+                textView.typingAttributes = typingAttrs
+            }
+        }
+
+        @objc func toggleItalic(_ sender: Any?) {
+            guard !isPlainText,
+                  let textView = textView,
+                  let converter = converter else { return }
+
+            let range = textView.selectedRange()
+
+            if range.length > 0 {
+                // Selection exists - apply formatting to selected text
+                guard let textStorage = textView.textStorage else { return }
+
+                let isItalic = converter.isItalic(in: textStorage, range: range)
+
+                if isItalic {
+                    converter.removeItalic(from: textStorage, range: range)
+                } else {
+                    converter.applyItalic(to: textStorage, range: range)
+                }
+
+                // Trigger text change handling
+                textView.didChangeText()
+            } else {
+                // No selection - toggle typing attributes for future typing
+                var typingAttrs = textView.typingAttributes
+                let currentFont = typingAttrs[.font] as? NSFont ?? textFont
+
+                let traits = NSFontManager.shared.traits(of: currentFont)
+                let isItalic = traits.contains(.italicFontMask)
+
+                let newFont: NSFont
+                if isItalic {
+                    newFont = NSFontManager.shared.convert(currentFont, toNotHaveTrait: .italicFontMask)
+                } else {
+                    newFont = NSFontManager.shared.convert(currentFont, toHaveTrait: .italicFontMask)
+                }
+
+                typingAttrs[.font] = newFont
+                textView.typingAttributes = typingAttrs
+            }
         }
 
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
-            parent.text = textView.string
+
+            if isPlainText {
+                // Plain text mode - direct string binding
+                parent.text = textView.string
+            } else {
+                // Rich text mode - debounce conversion to markdown
+                isUserEditing = true
+
+                conversionWorkItem?.cancel()
+                let workItem = DispatchWorkItem { [weak self] in
+                    guard let self = self,
+                          let converter = self.converter,
+                          let textView = self.textView else { return }
+
+                    let markdown = converter.markdown(from: textView.attributedString())
+                    // Update binding on main thread outside of view update cycle
+                    DispatchQueue.main.async {
+                        self.parent.text = markdown
+                        self.isUserEditing = false
+                    }
+                }
+                conversionWorkItem = workItem
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: workItem)
+            }
         }
 
         func textViewDidChangeSelection(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
-            parent.onCursorChange(textView.selectedRange().location)
+            // Only update cursor if not in the middle of editing
+            if !isUserEditing {
+                parent.onCursorChange(textView.selectedRange().location)
+            }
         }
     }
 }

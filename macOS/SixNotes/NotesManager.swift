@@ -14,6 +14,7 @@ struct Note: Codable, Identifiable {
     var content: String
     var lastModified: Date
     var cursorPosition: Int
+    var isPlainText: Bool
 
     // CloudKit sync metadata
     var cloudKitRecordName: String?
@@ -22,11 +23,12 @@ struct Note: Codable, Identifiable {
     var lastSyncAttempt: Date?
     var lastSyncError: String?
 
-    init(id: Int, content: String = "", cursorPosition: Int = 0) {
+    init(id: Int, content: String = "", cursorPosition: Int = 0, isPlainText: Bool = false) {
         self.id = id
         self.content = content
         self.lastModified = Date()
         self.cursorPosition = cursorPosition
+        self.isPlainText = isPlainText
         self.cloudKitRecordName = "note_\(id)"
         self.cloudKitChangeTag = nil
         self.syncState = .neverSynced
@@ -42,6 +44,7 @@ struct Note: Codable, Identifiable {
         content = try container.decode(String.self, forKey: .content)
         lastModified = try container.decode(Date.self, forKey: .lastModified)
         cursorPosition = try container.decode(Int.self, forKey: .cursorPosition)
+        isPlainText = try container.decodeIfPresent(Bool.self, forKey: .isPlainText) ?? false
 
         // Sync fields with defaults for migration
         cloudKitRecordName = try container.decodeIfPresent(String.self, forKey: .cloudKitRecordName) ?? "note_\(id)"
@@ -227,6 +230,26 @@ class NotesManager: ObservableObject {
 
     func getCursorPosition() -> Int {
         return notes[selectedNoteIndex].cursorPosition
+    }
+
+    var currentNoteIsPlainText: Bool {
+        notes[selectedNoteIndex].isPlainText
+    }
+
+    func togglePlainText() {
+        notes[selectedNoteIndex].isPlainText.toggle()
+        notes[selectedNoteIndex].lastModified = Date()
+        notes[selectedNoteIndex].syncState = .pendingUpload
+        save()
+        triggerDebouncedSync()
+    }
+
+    func setPlainText(_ isPlainText: Bool) {
+        notes[selectedNoteIndex].isPlainText = isPlainText
+        notes[selectedNoteIndex].lastModified = Date()
+        notes[selectedNoteIndex].syncState = .pendingUpload
+        save()
+        triggerDebouncedSync()
     }
 
     // MARK: - Persistence
