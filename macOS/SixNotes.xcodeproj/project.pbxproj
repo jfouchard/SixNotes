@@ -20,6 +20,7 @@
 		B1000002220000010000000A /* FontSettingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000002110000010000000A /* FontSettingTests.swift */; };
 		B1000003220000010000000A /* NotesManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000003110000010000000A /* NotesManagerTests.swift */; };
 		B1000004220000010000000A /* MarkdownConverterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000004110000010000000A /* MarkdownConverterTests.swift */; };
+		B1000005220000010000000A /* CloudKitSyncEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000005110000010000000A /* CloudKitSyncEngineTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +49,7 @@
 		B1000002110000010000000A /* FontSettingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontSettingTests.swift; sourceTree = "<group>"; };
 		B1000003110000010000000A /* NotesManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesManagerTests.swift; sourceTree = "<group>"; };
 		B1000004110000010000000A /* MarkdownConverterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownConverterTests.swift; sourceTree = "<group>"; };
+		B1000005110000010000000A /* CloudKitSyncEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitSyncEngineTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -117,6 +119,7 @@
 				B1000002110000010000000A /* FontSettingTests.swift */,
 				B1000003110000010000000A /* NotesManagerTests.swift */,
 				B1000004110000010000000A /* MarkdownConverterTests.swift */,
+				B1000005110000010000000A /* CloudKitSyncEngineTests.swift */,
 			);
 			path = SixNotesTests;
 			sourceTree = "<group>";
@@ -239,6 +242,7 @@
 				B1000002220000010000000A /* FontSettingTests.swift in Sources */,
 				B1000003220000010000000A /* NotesManagerTests.swift in Sources */,
 				B1000004220000010000000A /* MarkdownConverterTests.swift in Sources */,
+				B1000005220000010000000A /* CloudKitSyncEngineTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

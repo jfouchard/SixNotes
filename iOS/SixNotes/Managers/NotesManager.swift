@@ -30,6 +30,9 @@ class NotesManager: ObservableObject {
             UserDefaults.standard.set(isSyncEnabled, forKey: syncEnabledKey)
             if isSyncEnabled {
                 Task { await initializeSync() }
+                startPeriodicSync()
+            } else {
+                stopPeriodicSync()
             }
         }
     }
@@ -39,18 +42,11 @@ class NotesManager: ObservableObject {
 
     let syncEngine: CloudKitSyncEngine
 
-    @Published var suppressPlainTextWarning: Bool {
-        didSet {
-            UserDefaults.standard.set(suppressPlainTextWarning, forKey: suppressPlainTextWarningKey)
-        }
-    }
-
     private let saveKey = "SixNotes.notes"
     private let selectedNoteKey = "SixNotes.selectedNote"
     private let textFontKey = "SixNotes.textFont"
     private let codeFontKey = "SixNotes.codeFont"
     private let syncEnabledKey = "SixNotes.syncEnabled"
-    private let suppressPlainTextWarningKey = "SixNotes.suppressPlainTextWarning"
 
     init() {
         self.syncEngine = CloudKitSyncEngine()
@@ -86,9 +82,6 @@ class NotesManager: ObservableObject {
         // Load sync preference
         self.isSyncEnabled = UserDefaults.standard.bool(forKey: syncEnabledKey)
 
-        // Load plain text warning preference
-        self.suppressPlainTextWarning = UserDefaults.standard.bool(forKey: suppressPlainTextWarningKey)
-
         #if DEBUG
         print("[NotesManager] Init - isSyncEnabled: \(isSyncEnabled)")
         #endif
@@ -106,6 +99,7 @@ class NotesManager: ObservableObject {
 
     private func startPeriodicSync() {
         periodicSyncTimer?.invalidate()
+        guard isSyncEnabled else { return }
         periodicSyncTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self = self, self.isSyncEnabled else { return }
@@ -115,6 +109,11 @@ class NotesManager: ObservableObject {
                 await self.performSync()
             }
         }
+    }
+
+    private func stopPeriodicSync() {
+        periodicSyncTimer?.invalidate()
+        periodicSyncTimer = nil
     }
 
     // MARK: - Note Operations

@@ -12,7 +12,6 @@ final class NotesManagerTests: XCTestCase {
     private let textFontKey = "SixNotes.textFont"
     private let codeFontKey = "SixNotes.codeFont"
     private let syncEnabledKey = "SixNotes.syncEnabled"
-    private let warnOnPlainTextKey = "SixNotes.warnOnPlainTextConversion"
 
     override func setUp() {
         super.setUp()
@@ -33,7 +32,6 @@ final class NotesManagerTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: textFontKey)
         UserDefaults.standard.removeObject(forKey: codeFontKey)
         UserDefaults.standard.removeObject(forKey: syncEnabledKey)
-        UserDefaults.standard.removeObject(forKey: warnOnPlainTextKey)
     }
 
     // MARK: - Initialization Tests
@@ -295,17 +293,6 @@ final class NotesManagerTests: XCTestCase {
     }
 
     // MARK: - Plain Text Mode Tests
-
-    func testInitializationDefaultWarnOnPlainTextConversionEnabled() {
-        XCTAssertTrue(sut.warnOnPlainTextConversion)
-    }
-
-    func testWarnOnPlainTextConversionPersistence() {
-        sut.warnOnPlainTextConversion = false
-
-        let newManager = NotesManager()
-        XCTAssertFalse(newManager.warnOnPlainTextConversion)
-    }
 
     func testCurrentNoteIsPlainTextDefault() {
         XCTAssertFalse(sut.currentNoteIsPlainText)
