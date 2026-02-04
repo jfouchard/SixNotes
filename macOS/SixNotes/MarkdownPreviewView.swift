@@ -1,9 +1,9 @@
 import SwiftUI
 
 // Shared storage for the preview's attributed string
-class PreviewTextStorage: ObservableObject {
+class PreviewTextStorage {
     static let shared = PreviewTextStorage()
-    @Published var attributedString: NSAttributedString = NSAttributedString()
+    var attributedString: NSAttributedString = NSAttributedString()
 }
 
 struct MarkdownPreviewView: View {

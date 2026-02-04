@@ -121,6 +121,9 @@ class NotesManager: ObservableObject {
             UserDefaults.standard.set(isSyncEnabled, forKey: syncEnabledKey)
             if isSyncEnabled {
                 Task { await initializeSync() }
+                startPeriodicSync()
+            } else {
+                stopPeriodicSync()
             }
         }
     }
@@ -187,6 +190,7 @@ class NotesManager: ObservableObject {
 
     private func startPeriodicSync() {
         periodicSyncTimer?.invalidate()
+        guard isSyncEnabled else { return }
         periodicSyncTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self = self, self.isSyncEnabled else { return }
@@ -196,6 +200,11 @@ class NotesManager: ObservableObject {
                 await self.performSync()
             }
         }
+    }
+
+    private func stopPeriodicSync() {
+        periodicSyncTimer?.invalidate()
+        periodicSyncTimer = nil
     }
 
     // MARK: - Note Operations
