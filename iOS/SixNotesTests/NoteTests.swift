@@ -11,6 +11,7 @@ final class NoteTests: XCTestCase {
         XCTAssertEqual(note.id, 0)
         XCTAssertEqual(note.content, "")
         XCTAssertEqual(note.cursorPosition, 0)
+        XCTAssertFalse(note.isPlainText)
         XCTAssertNotNil(note.lastModified)
         XCTAssertEqual(note.cloudKitRecordName, "note_0")
         XCTAssertNil(note.cloudKitChangeTag)
@@ -36,12 +37,21 @@ final class NoteTests: XCTestCase {
         XCTAssertEqual(note.cursorPosition, 42)
     }
 
+    func testNoteInitializationWithIsPlainText() {
+        let note = Note(id: 1, content: "Plain text note", cursorPosition: 0, isPlainText: true)
+
+        XCTAssertEqual(note.id, 1)
+        XCTAssertEqual(note.content, "Plain text note")
+        XCTAssertTrue(note.isPlainText)
+    }
+
     // MARK: - Codable Tests
 
     func testNoteEncodingAndDecoding() throws {
         var originalNote = Note(id: 2, content: "Test note content", cursorPosition: 10)
         originalNote.syncState = .synced
         originalNote.cloudKitChangeTag = "test-tag"
+        originalNote.isPlainText = true
 
         let encoder = JSONEncoder()
         let data = try encoder.encode(originalNote)
@@ -54,6 +64,7 @@ final class NoteTests: XCTestCase {
         XCTAssertEqual(decodedNote.cursorPosition, originalNote.cursorPosition)
         XCTAssertEqual(decodedNote.syncState, originalNote.syncState)
         XCTAssertEqual(decodedNote.cloudKitChangeTag, originalNote.cloudKitChangeTag)
+        XCTAssertEqual(decodedNote.isPlainText, originalNote.isPlainText)
     }
 
     func testNoteArrayEncodingAndDecoding() throws {
@@ -115,6 +126,7 @@ final class NoteTests: XCTestCase {
         XCTAssertEqual(note.cloudKitRecordName, "note_2")
         XCTAssertEqual(note.syncState, .neverSynced)
         XCTAssertNil(note.cloudKitChangeTag)
+        XCTAssertFalse(note.isPlainText)
     }
 
     func testNoteDecodingWithSyncFields() throws {
@@ -153,6 +165,38 @@ final class NoteTests: XCTestCase {
         XCTAssertEqual(note1.id, 0)
         XCTAssertEqual(note2.id, 1)
         XCTAssertEqual(note1.id, note3.id)
+    }
+
+    // MARK: - isPlainText Tests
+
+    func testNoteIsPlainTextMutation() {
+        var note = Note(id: 0)
+        XCTAssertFalse(note.isPlainText)
+
+        note.isPlainText = true
+        XCTAssertTrue(note.isPlainText)
+
+        note.isPlainText = false
+        XCTAssertFalse(note.isPlainText)
+    }
+
+    func testNoteDecodingWithIsPlainText() throws {
+        let json = """
+        {
+            "id": 1,
+            "content": "Plain text content",
+            "lastModified": 0,
+            "cursorPosition": 5,
+            "isPlainText": true
+        }
+        """
+        let data = json.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let note = try decoder.decode(Note.self, from: data)
+
+        XCTAssertEqual(note.id, 1)
+        XCTAssertTrue(note.isPlainText)
     }
 
     // MARK: - Mutability Tests

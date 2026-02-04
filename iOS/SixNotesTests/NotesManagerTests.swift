@@ -12,6 +12,7 @@ final class NotesManagerTests: XCTestCase {
     private let textFontKey = "SixNotes.textFont"
     private let codeFontKey = "SixNotes.codeFont"
     private let syncEnabledKey = "SixNotes.syncEnabled"
+    private let suppressPlainTextWarningKey = "SixNotes.suppressPlainTextWarning"
 
     override func setUp() {
         super.setUp()
@@ -32,6 +33,7 @@ final class NotesManagerTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: textFontKey)
         UserDefaults.standard.removeObject(forKey: codeFontKey)
         UserDefaults.standard.removeObject(forKey: syncEnabledKey)
+        UserDefaults.standard.removeObject(forKey: suppressPlainTextWarningKey)
     }
 
     // MARK: - Initialization Tests
@@ -253,5 +255,76 @@ final class NotesManagerTests: XCTestCase {
 
         let newManager = NotesManager()
         XCTAssertTrue(newManager.isSyncEnabled)
+    }
+
+    // MARK: - Plain Text Tests
+
+    func testIsPlainTextDefault() {
+        XCTAssertFalse(sut.isPlainText(at: 0))
+    }
+
+    func testSetPlainText() {
+        sut.setPlainText(true, for: 0)
+        XCTAssertTrue(sut.isPlainText(at: 0))
+
+        sut.setPlainText(false, for: 0)
+        XCTAssertFalse(sut.isPlainText(at: 0))
+    }
+
+    func testTogglePlainText() {
+        XCTAssertFalse(sut.isPlainText(at: 0))
+
+        sut.togglePlainText(for: 0)
+        XCTAssertTrue(sut.isPlainText(at: 0))
+
+        sut.togglePlainText(for: 0)
+        XCTAssertFalse(sut.isPlainText(at: 0))
+    }
+
+    func testSetPlainTextInvalidIndexNegative() {
+        // Should not crash
+        sut.setPlainText(true, for: -1)
+        XCTAssertFalse(sut.isPlainText(at: -1))
+    }
+
+    func testSetPlainTextInvalidIndexTooHigh() {
+        // Should not crash
+        sut.setPlainText(true, for: 10)
+        XCTAssertFalse(sut.isPlainText(at: 10))
+    }
+
+    func testTogglePlainTextInvalidIndex() {
+        // Should not crash
+        sut.togglePlainText(for: -1)
+        sut.togglePlainText(for: 10)
+    }
+
+    func testSetPlainTextUpdatesLastModified() {
+        let originalDate = sut.notes[0].lastModified
+
+        // Small delay to ensure date difference
+        Thread.sleep(forTimeInterval: 0.01)
+
+        sut.setPlainText(true, for: 0)
+
+        XCTAssertGreaterThan(sut.notes[0].lastModified, originalDate)
+    }
+
+    func testPlainTextPersistence() {
+        sut.setPlainText(true, for: 2)
+
+        let newManager = NotesManager()
+        XCTAssertTrue(newManager.isPlainText(at: 2))
+    }
+
+    func testSuppressPlainTextWarningDefault() {
+        XCTAssertFalse(sut.suppressPlainTextWarning)
+    }
+
+    func testSuppressPlainTextWarningPersistence() {
+        sut.suppressPlainTextWarning = true
+
+        let newManager = NotesManager()
+        XCTAssertTrue(newManager.suppressPlainTextWarning)
     }
 }
