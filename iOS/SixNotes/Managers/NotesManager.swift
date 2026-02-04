@@ -39,11 +39,18 @@ class NotesManager: ObservableObject {
 
     let syncEngine: CloudKitSyncEngine
 
+    @Published var suppressPlainTextWarning: Bool {
+        didSet {
+            UserDefaults.standard.set(suppressPlainTextWarning, forKey: suppressPlainTextWarningKey)
+        }
+    }
+
     private let saveKey = "SixNotes.notes"
     private let selectedNoteKey = "SixNotes.selectedNote"
     private let textFontKey = "SixNotes.textFont"
     private let codeFontKey = "SixNotes.codeFont"
     private let syncEnabledKey = "SixNotes.syncEnabled"
+    private let suppressPlainTextWarningKey = "SixNotes.suppressPlainTextWarning"
 
     init() {
         self.syncEngine = CloudKitSyncEngine()
@@ -78,6 +85,9 @@ class NotesManager: ObservableObject {
 
         // Load sync preference
         self.isSyncEnabled = UserDefaults.standard.bool(forKey: syncEnabledKey)
+
+        // Load plain text warning preference
+        self.suppressPlainTextWarning = UserDefaults.standard.bool(forKey: suppressPlainTextWarningKey)
 
         #if DEBUG
         print("[NotesManager] Init - isSyncEnabled: \(isSyncEnabled)")
@@ -139,6 +149,29 @@ class NotesManager: ObservableObject {
 
     func getCursorPosition(for index: Int) -> Int {
         return notes[index].cursorPosition
+    }
+
+    func isPlainText(at index: Int) -> Bool {
+        guard index >= 0 && index < notes.count else { return false }
+        return notes[index].isPlainText
+    }
+
+    func setPlainText(_ isPlainText: Bool, for index: Int) {
+        guard index >= 0 && index < notes.count else { return }
+        notes[index].isPlainText = isPlainText
+        notes[index].lastModified = Date()
+        notes[index].syncState = .pendingUpload
+        save()
+        triggerDebouncedSync()
+    }
+
+    func togglePlainText(for index: Int) {
+        guard index >= 0 && index < notes.count else { return }
+        notes[index].isPlainText.toggle()
+        notes[index].lastModified = Date()
+        notes[index].syncState = .pendingUpload
+        save()
+        triggerDebouncedSync()
     }
 
     // MARK: - Persistence

@@ -10,6 +10,7 @@
 		9DE7919B2F114CA400BDC268 /* SixNotes.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9DE7919A2F114CA300BDC268 /* SixNotes.icon */; };
 		9DE7919C2F114CA400BDC268 /* SixNotes.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9DE7919A2F114CA300BDC268 /* SixNotes.icon */; };
 		A100000A /* CloudKitSyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000A /* CloudKitSyncEngine.swift */; };
+		A100000B /* MarkdownConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000B /* MarkdownConverter.swift */; };
 		A1000001 /* SixNotesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001 /* SixNotesApp.swift */; };
 		A1000002 /* Note.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* Note.swift */; };
 		A1000003 /* FontSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000003 /* FontSetting.swift */; };
@@ -21,6 +22,7 @@
 		B1000001 /* NoteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000001 /* NoteTests.swift */; };
 		B1000002 /* FontSettingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000002 /* FontSettingTests.swift */; };
 		B1000003 /* NotesManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000003 /* NotesManagerTests.swift */; };
+		B1000004 /* MarkdownConverterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000004 /* MarkdownConverterTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,6 +39,7 @@
 		9DE7919A2F114CA300BDC268 /* SixNotes.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = SixNotes.icon; sourceTree = "<group>"; };
 		A2000009 /* SixNotes.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SixNotes.entitlements; sourceTree = "<group>"; };
 		A200000A /* CloudKitSyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitSyncEngine.swift; sourceTree = "<group>"; };
+		A200000B /* MarkdownConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownConverter.swift; sourceTree = "<group>"; };
 		A2000001 /* SixNotesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SixNotesApp.swift; sourceTree = "<group>"; };
 		A2000002 /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
 		A2000003 /* FontSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontSetting.swift; sourceTree = "<group>"; };
@@ -49,6 +52,7 @@
 		B2000001 /* NoteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteTests.swift; sourceTree = "<group>"; };
 		B2000002 /* FontSettingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontSettingTests.swift; sourceTree = "<group>"; };
 		B2000003 /* NotesManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesManagerTests.swift; sourceTree = "<group>"; };
+		B2000004 /* MarkdownConverterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownConverterTests.swift; sourceTree = "<group>"; };
 		B3000001 /* SixNotesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SixNotesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -88,10 +92,19 @@
 				A5000006 /* Managers */,
 				A5000007 /* Views */,
 				A5000008 /* Sync */,
+				A5000009 /* Utilities */,
 				A2000008 /* Assets.xcassets */,
 				A2000009 /* SixNotes.entitlements */,
 			);
 			path = SixNotes;
+			sourceTree = "<group>";
+		};
+		A5000009 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				A200000B /* MarkdownConverter.swift */,
+			);
+			path = Utilities;
 			sourceTree = "<group>";
 		};
 		A5000008 /* Sync */ = {
@@ -152,6 +165,7 @@
 				B2000001 /* NoteTests.swift */,
 				B2000002 /* FontSettingTests.swift */,
 				B2000003 /* NotesManagerTests.swift */,
+				B2000004 /* MarkdownConverterTests.swift */,
 			);
 			path = SixNotesTests;
 			sourceTree = "<group>";
@@ -265,6 +279,7 @@
 				A1000006 /* NoteEditorView.swift in Sources */,
 				A1000007 /* SettingsView.swift in Sources */,
 				A100000A /* CloudKitSyncEngine.swift in Sources */,
+				A100000B /* MarkdownConverter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -275,6 +290,7 @@
 				B1000001 /* NoteTests.swift in Sources */,
 				B1000002 /* FontSettingTests.swift in Sources */,
 				B1000003 /* NotesManagerTests.swift in Sources */,
+				B1000004 /* MarkdownConverterTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
