@@ -6,7 +6,7 @@ struct SixNotesApp: App {
     @StateObject private var notesManager = NotesManager()
 
     var body: some Scene {
-        WindowGroup {
+        Window("SixNotes", id: "main") {
             ContentView()
                 .environmentObject(notesManager)
                 .onAppear {
@@ -52,6 +52,7 @@ struct SixNotesApp: App {
     private func configureWindow() {
         DispatchQueue.main.async {
             if let window = NSApplication.shared.windows.first {
+                appDelegate.configureMainWindow(window)
                 // Remove minimize and zoom buttons (yellow and green)
                 window.standardWindowButton(.miniaturizeButton)?.isHidden = true
                 window.standardWindowButton(.zoomButton)?.isHidden = true
@@ -63,6 +64,7 @@ struct SixNotesApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var notesManager: NotesManager?
     private let windowFrameKey = "SixNotes.mainWindowFrame"
+    private weak var mainWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         registerForPushNotifications()
@@ -73,13 +75,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Configure main window
         DispatchQueue.main.async {
             if let window = NSApplication.shared.windows.first {
-                window.delegate = self
-                window.tabbingMode = .disallowed
-                // Restore saved frame if available
-                if let frameString = UserDefaults.standard.string(forKey: self.windowFrameKey) {
-                    window.setFrame(NSRectFromString(frameString), display: true)
-                }
+                self.configureMainWindow(window)
             }
+        }
+    }
+
+    func configureMainWindow(_ window: NSWindow) {
+        guard mainWindow !== window else { return }
+
+        mainWindow = window
+        window.delegate = self
+        window.tabbingMode = .disallowed
+
+        // Restore the exact size and position used in the previous session.
+        if let frameString = UserDefaults.standard.string(forKey: windowFrameKey) {
+            window.setFrame(NSRectFromString(frameString), display: true)
         }
     }
 
@@ -92,10 +102,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     private func saveWindowFrame() {
-        if let window = NSApplication.shared.windows.first {
+        if let window = mainWindow {
             let frameString = NSStringFromRect(window.frame)
             UserDefaults.standard.set(frameString, forKey: windowFrameKey)
         }
+    }
+
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard sender === mainWindow else { return true }
+
+        // Keep the sole main window alive so reopening restores the same scene,
+        // including its frame, editor state, and responder state.
+        sender.orderOut(nil)
+        return false
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -108,14 +127,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        if !flag {
-            // Reopen the main window when dock icon is clicked and no windows are visible
-            for window in sender.windows {
-                window.makeKeyAndOrderFront(self)
-                return true
+        if let window = mainWindow {
+            if window.isMiniaturized {
+                window.deminiaturize(self)
             }
+            window.makeKeyAndOrderFront(self)
         }
-        return true
+
+        // The existing window has handled the reopen. Returning false prevents
+        // SwiftUI from creating another window for the same scene.
+        return false
     }
 
     private func registerForPushNotifications() {
