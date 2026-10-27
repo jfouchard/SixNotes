@@ -2,6 +2,8 @@ import SwiftUI
 
 struct NoteEditorView: View {
     let noteIndex: Int
+    /// Hidden when the Done button lives in the vertical bar instead
+    var showsDoneButton = true
     @EnvironmentObject var notesManager: NotesManager
     @State private var keyboardHeight: CGFloat = 0
     @State private var showToolbar = false
@@ -10,7 +12,8 @@ struct NoteEditorView: View {
     @State private var showSettings = false
     @StateObject private var textEditorCoordinator = RichTextEditorCoordinator()
 
-    private let toolbarHeight: CGFloat = 44
+    static let toolbarHeight: CGFloat = 44
+    private var toolbarHeight: CGFloat { Self.toolbarHeight }
     private let revealThreshold: CGFloat = 50
     private let dragResistance: CGFloat = 0.5
 
@@ -87,7 +90,10 @@ struct NoteEditorView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                 }
+                // Grow by the hidden part of the toolbar so the editor reaches the bottom edge
+                .frame(height: geometry.size.height + toolbarHeight - revealedAmount, alignment: .top)
                 .offset(y: revealedAmount - toolbarHeight)
+                .preference(key: NoteToolbarRevealKey.self, value: revealedAmount / toolbarHeight)
                 .simultaneousGesture(
                     DragGesture()
                         .onChanged { value in
@@ -118,7 +124,7 @@ struct NoteEditorView: View {
                 )
 
                 // Done button that appears only when software keyboard is up and find panel is not visible
-                if keyboardHeight > 0 && !textEditorCoordinator.isFindVisible {
+                if showsDoneButton && keyboardHeight > 0 && !textEditorCoordinator.isFindVisible {
                     Button {
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                         NotificationCenter.default.post(name: .dismissKeyboardWithAnimation, object: nil)
@@ -150,6 +156,17 @@ struct NoteEditorView: View {
         .sheet(isPresented: $showSettings) {
             SettingsView()
         }
+    }
+}
+
+// MARK: - NoteToolbarRevealKey
+
+/// How far the pull-down toolbar is revealed, from 0 (hidden) to 1 (fully shown)
+struct NoteToolbarRevealKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
 
