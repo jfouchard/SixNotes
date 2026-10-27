@@ -216,6 +216,21 @@ final class NotesManagerTests: XCTestCase {
         XCTAssertEqual(newManager.selectedNoteIndex, 0)
     }
 
+    // MARK: - SidebarPlacement Tests
+
+    func testSidebarPlacementWithoutHingeOrVerticalBar() {
+        XCTAssertEqual(SidebarPlacement(hasHinge: false, hasVerticalBar: false), .none)
+    }
+
+    func testSidebarPlacementUsesSystemVerticalBar() {
+        XCTAssertEqual(SidebarPlacement(hasHinge: true, hasVerticalBar: true), .system)
+        XCTAssertEqual(SidebarPlacement(hasHinge: false, hasVerticalBar: true), .system)
+    }
+
+    func testSidebarPlacementFloatsOnHingeWithoutVerticalBar() {
+        XCTAssertEqual(SidebarPlacement(hasHinge: true, hasVerticalBar: false), .floating)
+    }
+
     // MARK: - Multiple Notes Tests
 
     func testMultipleNotesContent() {
